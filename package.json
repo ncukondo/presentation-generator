@@ -1,5 +1,5 @@
 {
-  "name": "workshop-pre-video",
+  "name": "presentation-generator",
   "module": "generate.ts",
   "type": "module",
   "private": true,

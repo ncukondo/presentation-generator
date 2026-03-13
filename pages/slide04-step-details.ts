@@ -74,42 +74,20 @@ const ARROW_W = 0.45;
 const ARROW_H = 0.38;
 const ARROW_COLOR = "FF0000";
 
+// 各ステップのレイアウト設定
+// スクリーンショットに合わせて imgH/imgW/imgY, arrows, overlayImages 等を調整する。
+// 例:
+//   { color: C.step2, imgH: 3.80, imgY: 1.79,
+//     overlayImages: [{ asset: "banner.png", x: 2.0, y: 5.6, w: 9.3, h: 0.8 }],
+//     arrows: [{ x: 4.8, y: 5.4, rotate: 270 }],
+//     textAnnotations: [{ text: "注目", x: 3.8, y: 5.1, w: 1.9, h: 0.25, fontSize: 9 }],
+//   }
 const STEP_LAYOUTS: StepLayout[] = [
-  { color: C.step1, imgH: 3.35 },
-  {
-    color: C.step2, imgH: 3.80, imgY: 1.79,
-    overlayImages: [
-      { asset: "copyright-site-header.png", x: 2.03, y: 1.48, w: 1.19, h: 0.36 },
-      { asset: "copyright-cc-banner.png", x: 2.03, y: 5.68, w: 9.27, h: 0.79 },
-    ],
-    rectAnnotations: [
-      { x: 2.03, y: 5.68, w: 9.27, h: 0.79 },
-    ],
-  },
-  {
-    color: C.step3, imgW: 8.28, imgH: 5.24,
-    arrows: [{ x: 4.82, y: 5.45, rotate: 270 }],
-  },
-  {
-    color: C.step4, imgW: 9.22, imgH: 5.19,
-    arrows: [
-      { x: 4.31, y: 3.75, rotate: 180 },
-      { x: 4.31, y: 4.05, rotate: 180 },
-      { x: 11.27, y: 2.16, rotate: 180 },
-      { x: 11.27, y: 2.98, rotate: 180 },
-      { x: 11.27, y: 3.41, rotate: 180 },
-    ],
-  },
-  {
-    color: C.step5, imgW: 9.14, imgH: 5.22,
-    arrows: [
-      { x: 7.21, y: 5.01, rotate: 180 },
-      { x: 9.36, y: 3.14, rotate: 180 },
-    ],
-    textAnnotations: [
-      { text: "必ず出典を記載してください。", x: 3.84, y: 5.14, w: 1.94, h: 0.25, fontSize: 9 },
-    ],
-  },
+  { color: C.step1 },
+  { color: C.step2 },
+  { color: C.step3 },
+  { color: C.step4 },
+  { color: C.step5 },
   { color: C.step6 },
   { color: C.step7 },
 ];

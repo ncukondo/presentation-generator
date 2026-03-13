@@ -1,12 +1,13 @@
 /**
- * Pre-Workshop Video Presentation Generator
+ * Presentation Generator — メインエントリポイント
  *
- * Generates a PPTX for the workshop pre-video.
+ * slides.yaml の内容を元に PptxGenJS で PPTX ファイルを生成する。
+ * 各スライドのレイアウトは pages/*.ts に定義されている。
  *
  * Usage:
- *   bun run generate        # Generate PPTX
- *   bun run screenshot      # Convert to PNG
- *   bun run build           # Generate + screenshot
+ *   bun run generate        # PPTX 生成
+ *   bun run screenshot      # PNG 変換
+ *   bun run build           # generate + screenshot
  */
 import PptxGenJS from "pptxgenjs";
 import { SLIDE_W, SLIDE_H } from "./lib/theme";
@@ -24,20 +25,20 @@ import { buildSlide08 } from "./pages/slide08-references";
 const pres = new PptxGenJS();
 pres.defineLayout({ name: "WIDE16x9", width: SLIDE_W, height: SLIDE_H });
 pres.layout = "WIDE16x9";
-pres.title = "生成AIで医療者教育用動画を生成してみよう — 事前動画";
-pres.author = "ワークショップ企画者";
-pres.subject = "第58回日本医学教育学会大会 ワークショップ事前動画";
+pres.title = "プレゼンテーション";          // ← slides.yaml のタイトルに合わせて変更
+pres.author = "作成者名";                    // ← 発表者名に変更
+pres.subject = "プレゼンテーション動画";     // ← 用途に合わせて変更
 
 // ── Build all slides ────────────────────────────────────
 buildSlide01(pres);  // タイトル
-buildSlide02(pres);  // 背景
-buildSlide03(pres);  // NotebookLMとは
-buildSlide04(pres);  // 7ステップ（概要）
+buildSlide02(pres);  // 背景・課題
+buildSlide03(pres);  // ツール・手法紹介（2カラム: 特徴 + エビデンス）
+buildSlide04(pres);  // ステップ概要（7ステップ一覧）
 buildStepDetailSlides(pres);  // 各ステップ詳細（スクリーンショット付き）
-buildSlide05(pres);  // リスクと品質管理
-buildSlide06(pres);  // 事前準備
-buildSlide07(pres);  // まとめ・当日の流れ
-buildSlide08(pres);  // 文献一覧（自動生成）
+buildSlide05(pres);  // リスクと品質管理（2カラム: リスク + 対策）
+buildSlide06(pres);  // 事前準備（2x2 チェックリスト）
+buildSlide07(pres);  // クロージング（タイムライン + 締めメッセージ）
+buildSlide08(pres);  // 文献一覧（cite() で参照した文献を自動収集）
 
 // ── Save ────────────────────────────────────────────────
 const fileName = "presentation.pptx";

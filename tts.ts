@@ -1,13 +1,16 @@
 /**
- * Text-to-Speech generator for the pre-workshop video.
+ * TTS ナレーション生成 — slides.yaml の narration フィールドから音声ファイルを生成
  *
- * Reads narration from slides.yaml and generates WAV files for each slide
- * using Gemini Native Audio (TTS model).
+ * Gemini Native Audio (TTS model) を使用して、各スライドのナレーション原稿を
+ * WAV ファイルに変換する。生成された音声は voice_output/ に保存される。
  *
  * Usage:
  *   bun run tts
  *
- * Requires: .env with GEMINI_AUDIO_KEY
+ * 環境変数:
+ *   GEMINI_AUDIO_KEY  — Gemini API キー（.env に設定）
+ *   TTS_LIMIT=N       — 先頭 N スライドのみ生成（デバッグ用）
+ *   TTS_FORCE=1       — 既存ファイルを上書き
  */
 import { readFileSync, mkdirSync, existsSync } from "fs";
 import { join } from "path";

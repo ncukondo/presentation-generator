@@ -38,7 +38,7 @@ export function buildSlide03(pres: Pres) {
   });
 
   // Right column: Evidence
-  slide.addText("教育活用のエビデンス", {
+  slide.addText(d.evidence_heading as string, {
     x: rightX, y: 1.3, w: colW, h: 0.5,
     fontSize: FS.heading, fontFace: FONT, color: C.primary,
     bold: true, align: "left", valign: "middle",
@@ -55,19 +55,23 @@ export function buildSlide03(pres: Pres) {
     );
   });
 
-  // Desmedt et al. graphical abstract (AI podcast illustration)
-  const figPath = resolve(import.meta.dir, "../assets/desmedt-2025-graphical-abstract.png");
-  const figData = `image/png;base64,${readFileSync(figPath).toString("base64")}`;
-  const figSize = 2.1;
-  slide.addImage({
-    data: figData,
-    x: 2.28, y: 5.03, w: figSize, h: figSize,
-  });
-  slide.addText(cite("desmedt-2025"), {
-    x: 2.27, y: 7.1, w: 2.78, h: 0.3,
-    fontSize: 12, fontFace: FONT, color: C.midGray,
-    align: "left", valign: "middle",
-  });
+  // 補足画像（slides.yaml の figure フィールドで指定、省略時はスキップ）
+  if (d.figure) {
+    const figPath = resolve(import.meta.dir, `../assets/${d.figure}`);
+    const figData = `image/png;base64,${readFileSync(figPath).toString("base64")}`;
+    const figSize = 2.1;
+    slide.addImage({
+      data: figData,
+      x: 2.28, y: 5.03, w: figSize, h: figSize,
+    });
+    if (d.figure_cite) {
+      slide.addText(cite(d.figure_cite as string), {
+        x: 2.27, y: 7.1, w: 2.78, h: 0.3,
+        fontSize: 12, fontFace: FONT, color: C.midGray,
+        align: "left", valign: "middle",
+      });
+    }
+  }
 
   // URL at bottom
   slide.addText(d.url as string, {
