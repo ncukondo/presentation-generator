@@ -92,10 +92,15 @@ export function addTitleSlide(
     bold: true, align: "center", valign: "middle", wrap: true,
     lineSpacing: 60,
   });
+  // Accent underline beneath the title
+  slide.addShape(pres.ShapeType.rect, {
+    x: (SLIDE_W - 2.2) / 2, y: 3.75, w: 2.2, h: 0.08,
+    fill: { color: C.accent },
+  });
   slide.addText(subtitle, {
-    x: 1.0, y: 3.8, w: 11.3, h: 1.0,
-    fontSize: FS.sectionSub, fontFace: FONT, color: C.accentLight,
-    align: "center", valign: "middle", wrap: true,
+    x: 1.0, y: 3.95, w: 11.3, h: 0.9,
+    fontSize: FS.sectionSub, fontFace: FONT, color: C.white,
+    bold: true, align: "center", valign: "middle", wrap: true,
   });
   slide.addText(presenterInfo, {
     x: 1.0, y: 5.4, w: 11.3, h: 1.2,

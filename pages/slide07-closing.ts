@@ -3,7 +3,7 @@ import { C, FONT, FS, SLIDE_W, SLIDE_H } from "../lib/theme";
 import { addIcon, ICONS } from "../lib/icons";
 import { getSlide } from "../lib/slides-data";
 
-const TIMELINE_COLORS = [C.step1, C.step2, C.step4];
+const TIMELINE_BAND_COLOR = C.primary;
 
 export function buildSlide07(pres: Pres) {
   const d = getSlide("closing");
@@ -55,7 +55,7 @@ export function buildSlide07(pres: Pres) {
 
   timeline.forEach((item, i) => {
     const x = startX + i * (itemW + gap);
-    const color = TIMELINE_COLORS[i]!;
+    const color = TIMELINE_BAND_COLOR;
     const bandH = 0.5;
 
     // Card body (opaque white)
@@ -118,7 +118,7 @@ export function buildSlide07(pres: Pres) {
 
   slide.addText(d.closing_sub as string, {
     x: 1.0, y: 5.8, w: 11.3, h: 0.8,
-    fontSize: FS.body, fontFace: FONT, color: C.accentLight,
+    fontSize: FS.body, fontFace: FONT, color: C.white,
     align: "center", valign: "middle",
   });
 

@@ -7,9 +7,6 @@ import { addIcon, ICONS } from "../lib/icons";
 import { cite } from "../lib/cite";
 import { getSlide } from "../lib/slides-data";
 
-const EVIDENCE_COLORS = [C.step1, C.step2, C.step3];
-const EVIDENCE_BG = [C.cardBlue, C.cardGreen, C.cardPurple];
-
 export function buildSlide03(pres: Pres) {
   const d = getSlide("notebooklm");
   const features = d.features as string[];
@@ -29,7 +26,7 @@ export function buildSlide03(pres: Pres) {
   });
 
   features.forEach((text, i) => {
-    addIcon(slide, ICONS.check, leftX, 2.0 + i * 0.85, 0.4, C.step2);
+    addIcon(slide, ICONS.check, leftX, 2.0 + i * 0.85, 0.4, C.primary);
     slide.addText(text, {
       x: leftX + 0.5, y: 2.0 + i * 0.85, w: colW - 0.5, h: 0.8,
       fontSize: FS.small, fontFace: FONT, color: C.text,
@@ -37,7 +34,7 @@ export function buildSlide03(pres: Pres) {
     });
   });
 
-  // Right column: Evidence
+  // Right column: Evidence — consistent styling across cards (no index-based coloring)
   slide.addText(d.evidence_heading as string, {
     x: rightX, y: 1.3, w: colW, h: 0.5,
     fontSize: FS.heading, fontFace: FONT, color: C.primary,
@@ -45,13 +42,22 @@ export function buildSlide03(pres: Pres) {
   });
 
   evidence.forEach((ev, i) => {
-    addBox(slide, rightX, 2.0 + i * 1.55, colW, 1.35,
-      [
-        { text: ev.heading + "\n", options: { fontSize: FS.small, fontFace: FONT, color: EVIDENCE_COLORS[i]!, bold: true } },
-        { text: ev.body + "\n", options: { fontSize: FS.small, fontFace: FONT, color: C.text } },
-        { text: cite(ev.cite), options: { fontSize: citeFs, fontFace: FONT, color: C.midGray } },
-      ],
-      { align: "left", valign: "middle", fill: { color: EVIDENCE_BG[i]! } },
+    const cardY = 2.0 + i * 1.55;
+    const cardH = 1.35;
+    // Left accent stripe for signature consistency with slide02
+    slide.addShape(pres.ShapeType.rect, {
+      x: rightX, y: cardY, w: 0.12, h: cardH,
+      fill: { color: C.primary },
+    });
+    const citeText = cite(ev.cite);
+    const parts: Array<{ text: string; options: Record<string, unknown> }> = [
+      { text: ev.heading + "\n", options: { fontSize: FS.small, fontFace: FONT, color: C.primary, bold: true } },
+      { text: ev.body, options: { fontSize: FS.small, fontFace: FONT, color: C.text } },
+    ];
+    if (citeText) parts.push({ text: "\n" + citeText, options: { fontSize: citeFs, fontFace: FONT, color: C.midGray } });
+    addBox(slide, rightX, cardY, colW, cardH,
+      parts,
+      { align: "left", valign: "middle", fill: { color: C.cardBlue }, margin: [6, 14, 6, 14] },
     );
   });
 
@@ -73,10 +79,12 @@ export function buildSlide03(pres: Pres) {
     }
   }
 
-  // URL at bottom
-  slide.addText(d.url as string, {
-    x: MARGIN.left, y: 6.6, w: CONTENT_W, h: 0.5,
-    fontSize: FS.body, fontFace: FONT, color: C.accent,
-    bold: true, align: "center", valign: "middle",
-  });
+  // URL at bottom — neutral color (accent reserved for single CTA per slide)
+  if (d.url) {
+    slide.addText(d.url as string, {
+      x: MARGIN.left, y: 6.6, w: CONTENT_W, h: 0.5,
+      fontSize: FS.body, fontFace: FONT, color: C.darkGray,
+      align: "center", valign: "middle",
+    });
+  }
 }

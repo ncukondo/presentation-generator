@@ -5,7 +5,6 @@ import { addIcon, ICONS } from "../lib/icons";
 import { getSlide } from "../lib/slides-data";
 
 const ITEM_ICONS = [ICONS.accountGroup, ICONS.robot, ICONS.lightbulb, ICONS.fileDocument];
-const ITEM_COLORS = [C.step1, C.step2, C.step4, C.step5];
 
 export function buildSlide06(pres: Pres) {
   const d = getSlide("preparation");
@@ -40,13 +39,14 @@ export function buildSlide06(pres: Pres) {
       fill: { color: C.offWhite },
     });
 
-    // Number circle
+    // Number circle — anchored to card top for consistent alignment
+    const numY = y + 0.3;
     slide.addShape(pres.ShapeType.ellipse, {
-      x: x + 0.2, y: y + cardH / 2 - 0.275, w: 0.55, h: 0.55,
-      fill: { color: ITEM_COLORS[i]! },
+      x: x + 0.2, y: numY, w: 0.55, h: 0.55,
+      fill: { color: C.primary },
     });
     slide.addText(`${i + 1}`, {
-      x: x + 0.2, y: y + cardH / 2 - 0.275, w: 0.55, h: 0.55,
+      x: x + 0.2, y: numY, w: 0.55, h: 0.55,
       fontSize: FS.heading, fontFace: FONT, color: C.white,
       bold: true, align: "center", valign: "middle",
     });
@@ -58,7 +58,7 @@ export function buildSlide06(pres: Pres) {
     ];
     if (item.url) {
       textParts.push(
-        { text: `\n${item.url}`, options: { fontSize: 12, fontFace: FONT, color: C.midGray } },
+        { text: `\n${item.url}`, options: { fontSize: 14, fontFace: FONT, color: C.darkGray } },
       );
     }
     if (item.warning) {
@@ -68,7 +68,7 @@ export function buildSlide06(pres: Pres) {
     }
     slide.addText(textParts, {
       x: x + 0.95, y: y + 0.15, w: cardW - 1.15, h: cardH - 0.3,
-      align: "left", valign: "middle", wrap: true,
+      align: "left", valign: "top", wrap: true,
     });
   });
 }

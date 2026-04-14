@@ -6,6 +6,9 @@ bun.lock
 *.mp4
 output_images/*.png
 voice_output/*.wav
+screenshots/*.png
+screenshots/*.jpg
+qa-report.json
 
 # Secrets
 .env

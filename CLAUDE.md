@@ -76,6 +76,9 @@ bun run build    # PPTX 生成 + PNG 変換
 - **文字** — 読みにくい折り返しやはみ出しがないか
 - **コントラスト** — 背景と文字色の視認性は十分か
 
+デザイン原則の完全な基準は `docs/design-principles.md` を参照。
+`bun run qa` で API ベースの自動採点（`docs/qa-prompt.md` に基づく JSON レポート）も可能。
+
 問題があれば `slides.yaml`（内容の調整）または `pages/*.ts`（レイアウトの調整）を修正し、
 再度 `bun run build` → 画像確認を **問題がなくなるまで繰り返す**。
 
@@ -119,9 +122,25 @@ evidence:
 bun run generate      # PPTX 生成のみ
 bun run screenshot    # PPTX → PNG 変換
 bun run build         # generate + screenshot
+bun run qa            # 出力画像のデザイン自動採点（ローカルの claude CLI を使用）
 bun run tts           # ナレーション音声生成（要 .env）
 bun run video         # スライド画像+音声 → MP4 動画生成（要 ffmpeg）
 ```
+
+### QA レポート
+
+内部で `claude -p --output-format json --json-schema ...` を画像ごとに起動する。
+ログイン済みの Claude Code セッションをそのまま利用するので **API キー不要**。
+
+```bash
+bun run qa                              # 全スライドを採点 → qa-report.json
+bun run qa -- --only slide_004          # 1 枚だけ採点
+bun run qa -- --concurrency 4           # 並列度を上げる
+bun run qa -- --model claude-sonnet-4-5 # モデル指定
+```
+
+違反があれば標準出力に表示され、1件でも blocker / `pass=false` があれば exit 1 で終了する。
+判定基準は `docs/design-principles.md` と `docs/qa-prompt.md` が権威源。
 
 ### WSL マウントドライブでのビルド
 

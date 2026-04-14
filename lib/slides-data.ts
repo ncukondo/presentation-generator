@@ -15,6 +15,12 @@ export interface SlideData {
 const raw = readFileSync(join(import.meta.dir, "../slides.yaml"), "utf-8");
 const doc = parse(raw) as { slides: SlideData[] };
 
+// Structural validation — catches yaml shape mismatches (wrong types,
+// missing required fields) before they surface as cryptic errors inside pptxgenjs.
+// Placeholder text ("ここに記載" etc.) is reported as a warning, not an error.
+import { validateSlidesOrThrow } from "./validate";
+validateSlidesOrThrow(doc.slides);
+
 export function getSlide(id: string): SlideData {
   const s = doc.slides.find((s) => s.id === id);
   if (!s) throw new Error(`Slide "${id}" not found in slides.yaml`);

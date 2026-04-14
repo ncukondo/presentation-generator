@@ -17,25 +17,27 @@ const usedKeys = new Set<string>();
  * @param key - Citation key without the @ prefix (e.g. "qureshi-2023")
  * @returns APA in-text string, or the key as fallback on error
  */
-export function cite(key: string): string {
-  usedKeys.add(key);
-  const cached = cache.get(key);
-  if (cached) return cached;
+export function cite(key: string | undefined | null): string {
+  if (!key || !key.trim()) return "";
+  const trimmed = key.trim();
+  usedKeys.add(trimmed);
+  const cached = cache.get(trimmed);
+  if (cached !== undefined) return cached;
 
-  const result = Bun.spawnSync(["ref", "cite", key, "--in-text"], {
+  const result = Bun.spawnSync(["ref", "cite", trimmed, "--in-text"], {
     stdout: "pipe",
     stderr: "pipe",
   });
 
   const text = result.stdout.toString().trim();
   if (result.exitCode !== 0 || !text) {
-    console.warn(`[cite] Failed to resolve @${key}: ${result.stderr.toString().trim()}`);
-    const fallback = `(@${key})`;
-    cache.set(key, fallback);
+    console.warn(`[cite] Failed to resolve @${trimmed}: ${result.stderr.toString().trim()}`);
+    const fallback = `(@${trimmed})`;
+    cache.set(trimmed, fallback);
     return fallback;
   }
 
-  cache.set(key, text);
+  cache.set(trimmed, text);
   return text;
 }
 

@@ -11,7 +11,7 @@ import { addContentSlide } from "../lib/helpers";
 import { getSlide } from "../lib/slides-data";
 
 // ── Image loaders ───────────────────────────────────────
-const SCREENSHOT_DIR = resolve(import.meta.dir, "../../screenshots");
+const SCREENSHOT_DIR = resolve(import.meta.dir, "../screenshots");
 const ASSETS_DIR = resolve(import.meta.dir, "../assets");
 
 function loadImage(filepath: string): string {
