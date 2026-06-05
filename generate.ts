@@ -53,4 +53,5 @@ reportWrapLint(getCollected());
 // ── Save ────────────────────────────────────────────────
 const fileName = "presentation.pptx";
 await pres.writeFile({ fileName });
+// `slides` is an internal array not in PptxGenJS's public types — cast to read its length.
 console.log(`Done: ${fileName} (${(pres as any).slides.length} slides)`);

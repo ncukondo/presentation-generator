@@ -302,7 +302,7 @@ export function suggestFix(
   if (est.availEm < 15 && est.lines.length > 1 && measureEm(text) >= 15) {
     return {
       reason: "too-narrow",
-      detail: `1行あたり約${Math.floor(est.availEm)}全角字しか入らない(基準15字)。列を減らすか幅を広げる`,
+      detail: `1行あたり約${Math.floor(est.availEm)}全角字しか入らない(基準15字)`,
     };
   }
 

@@ -141,9 +141,14 @@ export function contrastRatio(a: string, b: string): number {
 
 /**
  * Darken `hex` (lowering L) until it reaches at least `minRatio` contrast
- * against white. Used so generated step/category colors stay legible as
- * large text / fills on the warm background (≈ white). Returns the original
- * if it already passes or if pure black still cannot reach the target.
+ * against pure white (#FFFFFF). Used so generated step/category colors stay
+ * legible as large text / fills. Note: the baseline is #FFFFFF, which yields
+ * the *maximum* contrast for a dark color — on the slightly-tinted `warmBg`
+ * (≈ mixWhite(primary, 0.96)) the real ratio is a hair lower. warmBg is so
+ * close to white that the shortfall is negligible in practice, but if `minRatio`
+ * is treated as a hard floor on warmBg, pass a small margin (e.g. 3.1) here.
+ * Returns the original if it already passes, or pure black if even that
+ * cannot reach the target.
  */
 export function ensureContrastOnWhite(hex: string, minRatio = 3.0): Hex {
   const hsl = hexToHsl(hex);

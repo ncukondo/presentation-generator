@@ -9,9 +9,9 @@
  *   2. record the (post-fix) text + box geometry into a module-level collector
  *      that `lib/lint-wrap.ts` inspects after the build.
  *
- * Rich-run text (TextProps[]) is left untouched (it is intentionally
- * structured) but still recorded — as concatenated text — so the linter can
- * flag residual problems.
+ * Rich-run text (TextProps[]) is balanced per-run as well (each run uses its
+ * own fontSize; see `balanceRichRuns`) and recorded — as concatenated text —
+ * so the linter can flag any residual problems.
  */
 import type { Pres, Slide } from "./types";
 import { balanceBreak } from "./text-metrics";
@@ -47,7 +47,9 @@ interface Sides { l?: number; r?: number; t?: number; b?: number; }
 function parseMargin(margin: unknown): Sides {
   if (typeof margin === "number") return { l: margin, r: margin, t: margin, b: margin };
   if (Array.isArray(margin) && margin.length >= 4) {
-    // [v, h, v, h] in practice (e.g. [4,8,4,8]); use indices 1/3 for horizontal.
+    // PptxGenJS 4-value margins are [top, right, bottom, left] (e.g. [4,8,4,8]).
+    // Shorter forms (e.g. a 2-value [v,h]) aren't used here and fall through to
+    // `{}` below, so the linter silently applies its default side margins.
     return { t: margin[0], r: margin[1], b: margin[2], l: margin[3] };
   }
   return {};
