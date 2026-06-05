@@ -11,6 +11,8 @@
  */
 import PptxGenJS from "pptxgenjs";
 import { SLIDE_W, SLIDE_H } from "./lib/theme";
+import { instrumentPres, getCollected } from "./lib/instrument";
+import { reportWrapLint } from "./lib/lint-wrap";
 import { buildSlide01 } from "./pages/slide01-title";
 import { buildSlide02 } from "./pages/slide02-background";
 import { buildSlide03 } from "./pages/slide03-notebooklm";
@@ -23,6 +25,9 @@ import { buildSlide08 } from "./pages/slide08-references";
 
 // ── Create presentation ─────────────────────────────────
 const pres = new PptxGenJS();
+// Auto-balance line breaks (natural / kinsoku-aware) and collect text geometry
+// for the wrap linter. Must run before any slide is built.
+instrumentPres(pres);
 pres.defineLayout({ name: "WIDE16x9", width: SLIDE_W, height: SLIDE_H });
 pres.layout = "WIDE16x9";
 pres.title = "プレゼンテーション";          // ← slides.yaml のタイトルに合わせて変更
@@ -40,7 +45,13 @@ buildSlide06(pres);  // 事前準備（2x2 チェックリスト）
 buildSlide07(pres);  // クロージング（タイムライン + 締めメッセージ）
 buildSlide08(pres);  // 文献一覧（cite() で参照した文献を自動収集）
 
+// ── Wrap lint ───────────────────────────────────────────
+// Surfaces anything auto-balancing couldn't fix (too-narrow / overflow /
+// forced break) as agent-actionable recommendations + wrap-report.json.
+reportWrapLint(getCollected());
+
 // ── Save ────────────────────────────────────────────────
 const fileName = "presentation.pptx";
 await pres.writeFile({ fileName });
-console.log(`Done: ${fileName} (${pres.slides.length} slides)`);
+// `slides` is an internal array not in PptxGenJS's public types — cast to read its length.
+console.log(`Done: ${fileName} (${(pres as any).slides.length} slides)`);

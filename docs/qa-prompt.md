@@ -21,7 +21,7 @@ reference concrete visual evidence, and do not be lenient.
 
 1. **Overflow / cutoff** — any text or element clipped by the card edge or slide edge
 2. **Overlap** — any text / icon / card overlapping another element (minimum gap 0.1 in)
-3. **Unnatural wrapping** — Japanese text wrapping character-by-character, or titles wrapping to 3+ lines
+3. **Unnatural wrapping** — Japanese text wrapping character-by-character; an **orphan last line holding only 1–3 full-width characters** (e.g. "…タイト" / "ル"); a line break that splits an alphanumeric token (e.g. "GPT-" / "4o"); punctuation `。、）」` appearing at the start of a line; or titles wrapping to 3+ lines. (The build auto-balances most of these via `lib/text-metrics.ts`; flag anything that still shows in the image.)
 4. **Contrast failure** — text that is hard to read against its background (estimate roughly by eye)
 5. **Minimum font** — any body text visibly smaller than ~22pt (you cannot measure exactly, estimate if one block is conspicuously smaller than siblings)
 6. **Empty space imbalance** — a conspicuous blank region (>25% of the content area) with no visual purpose, or content bunched in one half
