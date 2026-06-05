@@ -9,6 +9,7 @@ voice_output/*.wav
 screenshots/*.png
 screenshots/*.jpg
 qa-report.json
+wrap-report.json
 
 # Secrets
 .env

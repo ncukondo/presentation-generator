@@ -1,48 +1,22 @@
 import type PptxGenJS from "pptxgenjs";
+import { resolveTheme, resolveFonts, type Palette } from "./themes";
+import { getTheme } from "./slides-data";
 
 // ── Colors ──────────────────────────────────────────────
-// Contrast ratios (vs #FFFFFF) are noted for accessibility.
-// All white-on-color combos meet WCAG AA large-text (3:1+).
-export const C = {
-  primary: "1E88E5",       // Material Blue 600 — 4.05:1 ✓
-  primaryLight: "64B5F6",  // Material Blue 300
-  accent: "FF9800",        // Material Orange 500
-  accentLight: "FFCC80",   // Orange 200
-
-  white: "FFFFFF",
-  offWhite: "FAFBFE",
-  warmBg: "FFF9F2",        // warm cream for slide backgrounds
-  lightGray: "ECEFF1",
-  midGray: "B0BEC5",
-  darkGray: "546E7A",
-  text: "37474F",          // Blue Grey 800 — softer, friendly
-  black: "000000",
-
-  // step colors — all ≥3:1 vs white for large-text AA
-  step1: "1E88E5",  // Blue 600  — 4.05:1
-  step2: "43A047",  // Green 600 — 3.05:1
-  step3: "AB47BC",  // Purple 400 — 3.54:1
-  step4: "EF6C00",  // Orange 800 — 3.06:1
-  step5: "E53935",  // Red 600   — 3.49:1
-  step6: "0097A7",  // Cyan 700  — 3.44:1
-  step7: "546E7A",  // BlueGrey 600 — 5.26:1
-
-  // card backgrounds — pastel, cheerful
-  cardBlue: "E3F2FD",     // Blue 50
-  cardGreen: "E8F5E9",    // Green 50
-  cardOrange: "FFF3E0",   // Orange 50
-  cardPurple: "F3E5F5",   // Purple 50
-  cardCyan: "E0F7FA",     // Cyan 50
-
-  // chart
-  chartBlue: "42A5F5",
-  chartGreen: "66BB6A",
-  chartOrange: "FFA726",
-} as const;
+// `C` is resolved from the `theme:` block in slides.yaml (preset name, seed
+// color, or field overrides — see lib/themes.ts). The field SHAPE is fixed, so
+// pages/*.ts stay agnostic to which theme is active.
+//
+// Default preset "blue" values (with WCAG notes vs #FFFFFF — white-on-color
+// combos meet AA large-text 3:1+):
+//   primary 1E88E5 (4.05:1) · accent FF9800 · text 37474F · warmBg FFF9F2
+//   step1..7 are all ≥3:1 vs white for large-text AA.
+export const C: Palette = resolveTheme(getTheme());
 
 // ── Fonts ───────────────────────────────────────────────
-export const FONT_JP = "Meiryo";
-export const FONT_EN = "Arial";
+const _fonts = resolveFonts(getTheme());
+export const FONT_JP = _fonts.jp;   // 日本語（既定 Meiryo）
+export const FONT_EN = _fonts.en;   // 英語（既定 Arial）
 export const FONT = FONT_JP;
 
 // ── Font sizes ──────────────────────────────────────────
