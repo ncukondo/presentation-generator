@@ -6,20 +6,25 @@
  *
  * Usage:
  *   cite("qureshi-2023")        → "(Qureshi et al., 2023)"
- *   cite("flemyng-2025")        → "(Flemyng et al., 2025)"
+ *   cite("@Sackett1996-qd")     → "(Sackett et al., 1996)"  // 先頭 @ も可
  */
 
 const cache = new Map<string, string>();
 const usedKeys = new Set<string>();
 
+/** 先頭の @ と前後空白を除いた正規化キー（slides.yaml は pandoc 流に "@key" で書ける）。 */
+function normalize(key: string): string {
+  return key.trim().replace(/^@/, "");
+}
+
 /**
  * Resolve a pandoc citekey to APA in-text citation.
- * @param key - Citation key without the @ prefix (e.g. "qureshi-2023")
+ * @param key - Citation key with or without the @ prefix (e.g. "@Sackett1996-qd")
  * @returns APA in-text string, or the key as fallback on error
  */
 export function cite(key: string | undefined | null): string {
   if (!key || !key.trim()) return "";
-  const trimmed = key.trim();
+  const trimmed = normalize(key);
   usedKeys.add(trimmed);
   const cached = cache.get(trimmed);
   if (cached !== undefined) return cached;
@@ -45,12 +50,13 @@ export function cite(key: string | undefined | null): string {
  * Resolve a citekey to full APA reference string.
  */
 function citeApa(key: string): string {
-  const result = Bun.spawnSync(["ref", "cite", key, "--style", "apa"], {
+  const k = normalize(key);
+  const result = Bun.spawnSync(["ref", "cite", k, "--style", "apa"], {
     stdout: "pipe",
     stderr: "pipe",
   });
   const text = result.stdout.toString().trim();
-  if (result.exitCode !== 0 || !text) return `@${key}`;
+  if (result.exitCode !== 0 || !text) return `@${k}`;
   return text;
 }
 
