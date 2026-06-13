@@ -9,7 +9,8 @@
     "build": "bun run generate && bun run screenshot",
     "tts": "bun run tts.ts",
     "video": "bun run video.ts",
-    "qa": "bun run qa.ts"
+    "qa": "bun run qa.ts",
+    "extract": "python3 tools/extract_materials.py"
   },
   "devDependencies": {
     "@types/bun": "latest"
