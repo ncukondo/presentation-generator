@@ -166,6 +166,22 @@ bun run qa -- --model claude-sonnet-4-5 # モデル指定
 違反があれば標準出力に表示され、1件でも blocker / `pass=false` があれば exit 1 で終了する。
 判定基準は `docs/design-principles.md` と `docs/qa-prompt.md` が権威源。
 
+### 配布物の生成（PDF・ハンドアウト・動画自動再生）
+
+生成した PPTX から配布物・上映用ファイルを作る補助スクリプト（いずれも引数で対象 PPTX/PDF を指定）。
+`*.sh` は Windows PowerPoint(COM) を使うので **WSL から見える Windows パス**（`/mnt/...`）に対象を置くこと。
+
+```bash
+bash tools/set-video-autoplay.sh <pptx>      # 全動画に「自動再生(WithPrevious)＋ループ」を付与（冪等）
+                                             #   ついでに PptxGenJS が稀に出す重複 cNvPr id を再保存で解消
+bash tools/export-pdf.sh <pptx> [out.pdf]    # PDF 化。非表示(hidden)スライドは除外（元 pptx は不変）
+python3 tools/make-handout.py <1up.pdf> [out.pdf] [cols] [rows]  # 6面付けハンドアウト（既定 2x3）。要 PyMuPDF
+```
+
+- `set-video-autoplay.sh` … PptxGenJS の埋め込み動画は既定で「クリック再生」。これを上映用に自動再生＋ループへ。
+- `export-pdf.sh` … 質疑用などの非表示スライドを配布 PDF から外したい時に。`SlideShowTransition.Hidden` で判定。
+- `make-handout.py` … PowerPoint がレンダリングした 1up PDF を入力に PyMuPDF（`pip install pymupdf`）で面付け。
+
 ### WSL マウントドライブでのビルド
 
 WSL のマウントドライブ上では bun がシンボリックリンク等の問題で動作しない場合がある。
