@@ -188,6 +188,6 @@ cp /tmp/presentation/output_images/*.png "$SRC/output_images/"
 ## Theme Constants
 
 - **配色は `slides.yaml` の `theme:` で選択**（preset / シード色 / 個別上書き）。値は `lib/themes.ts`、解決は `lib/theme.ts`。詳細は `docs/theme.md`。
-- Colors: `lib/theme.ts` の `C` オブジェクト（役割名で参照。既定 preset `blue` は Primary `#1E88E5` / Accent `#FF9800`）
+- Colors: `lib/theme.ts` の `C` オブジェクト（役割名で参照。既定 preset `slate` は Primary `#37474F` / Accent `#FF7043`。`blue` 等は `docs/theme.md`）
 - Font sizes: `lib/theme.ts` の `FS` オブジェクト
 - Fonts: `theme.fonts` で上書き可（既定: メイリオ（日本語）, Arial（英語））

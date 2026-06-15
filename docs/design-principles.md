@@ -12,15 +12,15 @@
 ### 役割を固定する — 色に「意味」を持たせる
 
 1つの色 = 1つの役割。順番や装飾で色を割り振らない。
-具体色は**テーマ（`slides.yaml` の `theme:` / `lib/themes.ts`）で差し替わる**ので、コードでは hex 直書きせず役割名（`C.xxx`）で参照する。下表の hex はデフォルト preset `blue` の値。
+具体色は**テーマ（`slides.yaml` の `theme:` / `lib/themes.ts`）で差し替わる**ので、コードでは hex 直書きせず役割名（`C.xxx`）で参照する。既定 preset は `slate`。下表の hex は分かりやすさのため preset `blue` を例に示す（役割名で参照していれば preset 差し替えで一括再配色される）。
 
-| 役割 | 参照（既定値） | 使う場所 |
+| 役割 | 参照（例: blue preset） | 使う場所 |
 |------|--------|---------|
-| **Primary** | `C.primary` (既定 #1E88E5) | タイトルバー・章見出し・ボディ強調の主役 |
-| **Accent** | `C.accent` (既定 #FF9800) | CTA・重要告知・アンダーライン。**1スライドに最大1箇所** |
-| **Text** | `C.text` (既定 #37474F) | 本文。真黒は避ける |
+| **Primary** | `C.primary` (例 #1E88E5) | タイトルバー・章見出し・ボディ強調の主役 |
+| **Accent** | `C.accent` (例 #FF9800) | CTA・重要告知・アンダーライン。**1スライドに最大1箇所** |
+| **Text** | `C.text` (例 #37474F) | 本文。真黒は避ける |
 | **MidGray** | `C.midGray` / `C.darkGray` | 補助情報・引用文字 |
-| **Warm BG** | `C.warmBg` (既定 #FFF9F2) | スライド地色 |
+| **Warm BG** | `C.warmBg` (例 #FFF9F2) | スライド地色 |
 | **Card pastel** | `C.cardBlue` etc. | セマンティックに色分ける時**だけ**使う |
 | **Step colors** | `C.step1..7` | 同一画面に並ぶ「区別が意味を持つ」要素（7ステップ・複数カテゴリ）専用 |
 
