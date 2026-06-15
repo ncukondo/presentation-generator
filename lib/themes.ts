@@ -109,7 +109,11 @@ export const presets: Record<string, Palette> = {
   },
 };
 
-export const DEFAULT_PRESET = "blue";
+// Default preset. "slate" (monochrome slate + a single coral accent) is chosen
+// as the out-of-box default because it degrades gracefully — a deck that never
+// touches `theme:` still looks restrained and professional, which suits
+// academic / data-dense talks. Switch to "blue" (or any preset) per project.
+export const DEFAULT_PRESET = "slate";
 
 // ── Seed-based derivation ────────────────────────────────
 export interface ThemeSeed {
