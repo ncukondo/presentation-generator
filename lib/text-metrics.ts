@@ -18,7 +18,7 @@
 // ── Character classes ────────────────────────────────────
 // 行頭禁則: must NOT start a line → cannot break immediately before these.
 const LINE_START_FORBIDDEN = new Set(
-  "。、，．・：；！？”’）］｝」』】〉》〕｠〙〗ぁぃぅぇぉっゃゅょゎゝゞァィゥェォッャュョヮヵヶ々ー～〜%‰℃°，.!?:;)]}".split(""),
+  "。、，．・：；！？”’）］｝」』】〉》〕｠〙〗ぁぃぅぇぉっゃゅょゎゝゞァィゥェォッャュョヮヵヶ々ー～〜%‰℃°，.,!?:;)]}".split(""),
 );
 // 行末禁則: must NOT end a line → cannot break immediately after these.
 const LINE_END_FORBIDDEN = new Set(
@@ -260,7 +260,10 @@ function balanceSegment(seg: string, avail: number): string {
   let bestWidth = avail;
   for (let iter = 0; iter < 24 && hi - lo > 0.05; iter++) {
     const mid = (lo + hi) / 2;
-    if (wrapAt(cells, mid).lines.length <= L) {
+    const r = wrapAt(cells, mid);
+    // 行数が増えない かつ 禁則を破る強制改行を生まない 幅のみ採用する。
+    // （これを許すと "、" や "," が行頭に来る等の不自然な改行が出る）
+    if (r.lines.length <= L && !r.hasForcedBreak) {
       bestWidth = mid;
       hi = mid;
     } else {
