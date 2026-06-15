@@ -10,6 +10,7 @@
     "tts": "bun run tts.ts",
     "video": "bun run video.ts",
     "qa": "bun run qa.ts",
+    "gen-refs": "bun run tools/gen-refs.ts",
     "extract": "python3 tools/extract_materials.py"
   },
   "devDependencies": {

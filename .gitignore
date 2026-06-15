@@ -10,6 +10,7 @@ screenshots/*.png
 screenshots/*.jpg
 qa-report.json
 wrap-report.json
+assets/references.json
 
 # Secrets
 .env
