@@ -1,6 +1,6 @@
 /**
  * Transparently auto-balances every text box and records its geometry for the
- * wrap linter — without touching any pages/*.ts.
+ * wrap linter — without touching any renderer in lib/render.ts.
  *
  * `instrumentPres(pres)` wraps `pres.addSlide` so that each returned slide's
  * `addText` is patched to:

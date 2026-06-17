@@ -5,7 +5,7 @@ import { getTheme } from "./slides-data";
 // ── Colors ──────────────────────────────────────────────
 // `C` is resolved from the `theme:` block in slides.yaml (preset name, seed
 // color, or field overrides — see lib/themes.ts). The field SHAPE is fixed, so
-// pages/*.ts stay agnostic to which theme is active.
+// renderers in lib/render.ts stay agnostic to which theme is active.
 //
 // Default preset "blue" values (with WCAG notes vs #FFFFFF — white-on-color
 // combos meet AA large-text 3:1+):
