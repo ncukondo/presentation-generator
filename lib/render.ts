@@ -66,7 +66,7 @@ function renderTitle(pres: Pres, s: DeckSlide): Slide {
 function renderGrid(pres: Pres, s: DeckSlide): Slide {
   const v = vis(s);
   const cards = v.cards as Array<{
-    heading: string; body: string; detail: string; cites: string[];
+    heading: string; body: string; detail?: string; cites?: string[];
   }>;
 
   const slide = addContentSlide(pres, s.title);
@@ -87,7 +87,7 @@ function renderGrid(pres: Pres, s: DeckSlide): Slide {
 
   cards.forEach((card, i) => {
     const x = xs[i]!;
-    const citeText = card.cites.map((k) => cite(k)).join("; ");
+    const citeText = (card.cites ?? []).map((k) => cite(k)).join("; ");
 
     slide.addShape(pres.ShapeType.rect, {
       x, y: cardY, w: colW, h: cardH,
@@ -122,7 +122,7 @@ function renderGrid(pres: Pres, s: DeckSlide): Slide {
     addBox(slide, x + 0.25, cardY + numberSize / 2 + 0.75, colW - 0.5, cardH - numberSize / 2 - 1.0,
       [
         { text: card.body + "\n\n", options: { fontSize: FS.small, fontFace: FONT, color: C.text, bold: true } },
-        { text: card.detail + "\n", options: { fontSize: FS.small, fontFace: FONT, color: C.darkGray } },
+        { text: card.detail ? card.detail + "\n" : "", options: { fontSize: FS.small, fontFace: FONT, color: C.darkGray } },
         { text: citeText, options: { fontSize: citeFs, fontFace: FONT, color: C.midGray } },
       ],
       {
