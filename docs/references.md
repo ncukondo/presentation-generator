@@ -28,8 +28,8 @@ bun run gen-refs          # slides.yaml の引用を集約 → ref export → as
 
 - 引用を増減したら再実行する（`assets/references.json` は生成物＝`.gitignore` 済み）。
 - 別ファイルを読むときは `SLIDES_YAML=path/to.yaml bun run gen-refs`。
-- ページ側は `loadReferenceEntries()`（`lib/refs.ts`）でキャッシュを読み、文献一覧スライドに流す。
-  既定の `pages/slide08-references.ts` は `lib/cite.ts` を使う実装のままなので、
+- レンダラ側は `loadReferenceEntries()`（`lib/refs.ts`）でキャッシュを読み、文献一覧スライドに流す。
+  既定の `renderReferences`（`lib/render.ts`、layout: references）は `lib/cite.ts` を使う実装のままなので、
   deterministic 方式に切り替えたい場合だけ `loadReferenceEntries()` 参照に差し替える。
 - `ref` 不在/失敗時は `gen-refs` が非0終了する（既存キャッシュを残す運用なら CI で分岐させる）。
 

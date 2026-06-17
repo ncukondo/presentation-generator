@@ -1,20 +1,30 @@
 /**
- * Runtime validation for slides.yaml.
+ * Runtime validation for slides.yaml (data-driven mode).
  * Catches shape mismatches early with clear, targeted error messages
  * instead of cryptic deep-call-stack TypeErrors inside pptxgenjs.
  *
- * Each slide id has a schema below. Unknown ids are ignored (forward-compatible).
+ * Each slide declares a `layout`; its schema is keyed by layout below.
+ * Top-level fields (e.g. `title`) and `visual.*` fields are checked separately.
+ * Unknown layouts are ignored here (forward-compatible) — `lib/render.ts` will
+ * throw at render time if a layout truly has no renderer.
  */
 
 import type { SlideData } from "./slides-data";
 
 type FieldKind =
   | { t: "string"; optional?: boolean }
+  | { t: "number"; optional?: boolean }
   | { t: "string[]"; optional?: boolean }
   | { t: "object"; optional?: boolean; fields: Record<string, FieldKind> }
   | { t: "object[]"; optional?: boolean; fields: Record<string, FieldKind> };
 
 type Schema = Record<string, FieldKind>;
+
+/** Per-layout schema: top-level fields + fields nested under `visual`. */
+interface LayoutSchema {
+  top?: Schema;
+  visual?: Schema;
+}
 
 const PLACEHOLDER_RE = /(ここに記載|ここに記入|をここに|TODO|xxxx|lorem ipsum)/i;
 
@@ -30,6 +40,11 @@ function checkField(path: string, value: unknown, kind: FieldKind, errors: strin
         errors.push(`${path}: expected string, got ${describe(value)}`);
       } else if (PLACEHOLDER_RE.test(value)) {
         warnings.push(`${path}: placeholder text detected ("${truncate(value)}")`);
+      }
+      return;
+    case "number":
+      if (typeof value !== "number") {
+        errors.push(`${path}: expected number, got ${describe(value)}`);
       }
       return;
     case "string[]":
@@ -86,111 +101,150 @@ function truncate(s: string): string {
   return s.length > 30 ? s.slice(0, 30) + "…" : s;
 }
 
-// ── Schemas per slide id ──────────────────────────────────
+// ── Schemas per layout ────────────────────────────────────
 const CITE_ARR: FieldKind = { t: "string[]", optional: true };
 
-const SCHEMAS: Record<string, Schema> = {
+const SCHEMAS: Record<string, LayoutSchema> = {
   title: {
-    title: { t: "string" },
-    subtitle: { t: "string" },
-    presenter: { t: "string" },
+    top: { title: { t: "string" } },
+    visual: {
+      subtitle: { t: "string" },
+      presenter: { t: "string" },
+    },
   },
-  background: {
-    title: { t: "string" },
-    subtitle: { t: "string" },
-    cards: {
-      t: "object[]",
-      fields: {
-        heading: { t: "string" },
-        body: { t: "string" },
-        detail: { t: "string", optional: true },
-        cites: CITE_ARR,
+  grid: {
+    top: { title: { t: "string" } },
+    visual: {
+      subtitle: { t: "string" },
+      cards: {
+        t: "object[]",
+        fields: {
+          heading: { t: "string" },
+          body: { t: "string" },
+          detail: { t: "string", optional: true },
+          cites: CITE_ARR,
+        },
       },
     },
   },
-  notebooklm: {
-    title: { t: "string" },
-    subtitle: { t: "string" },
-    features: { t: "string[]" },
-    evidence_heading: { t: "string" },
-    evidence: {
-      t: "object[]",
-      fields: {
-        heading: { t: "string" },
-        body: { t: "string" },
-        cite: { t: "string", optional: true },
+  evidence: {
+    top: { title: { t: "string" } },
+    visual: {
+      subtitle: { t: "string" },
+      features: { t: "string[]" },
+      evidence_heading: { t: "string" },
+      evidence: {
+        t: "object[]",
+        fields: {
+          heading: { t: "string" },
+          body: { t: "string" },
+          cite: { t: "string", optional: true },
+        },
       },
+      figure: { t: "string", optional: true },
+      figure_cite: { t: "string", optional: true },
+      url: { t: "string", optional: true },
     },
-    url: { t: "string", optional: true },
   },
-  "steps-overview": {
-    title: { t: "string" },
-    subtitle: { t: "string", optional: true },
-    steps: { t: "string[]" },
-    note: { t: "string", optional: true },
+  steps: {
+    top: { title: { t: "string" } },
+    visual: {
+      subtitle: { t: "string", optional: true },
+      steps: { t: "string[]" },
+      note: { t: "string", optional: true },
+    },
+  },
+  "step-detail": {
+    top: { title: { t: "string" } },
+    visual: {
+      step: { t: "number", optional: true },
+      screenshot: { t: "string" },
+      note: { t: "string", optional: true },
+    },
   },
   risks: {
-    title: { t: "string" },
-    risks_heading: { t: "string" },
-    risks: {
-      t: "object[]",
-      fields: {
-        heading: { t: "string" },
-        body: { t: "string" },
-        cites: CITE_ARR,
+    top: { title: { t: "string" } },
+    visual: {
+      risks_heading: { t: "string" },
+      risks: {
+        t: "object[]",
+        fields: {
+          heading: { t: "string" },
+          body: { t: "string" },
+          cites: CITE_ARR,
+        },
       },
-    },
-    solutions_heading: { t: "string" },
-    solutions: {
-      t: "object[]",
-      fields: {
-        heading: { t: "string" },
-        body: { t: "string" },
-        cites: CITE_ARR,
+      solutions_heading: { t: "string" },
+      solutions: {
+        t: "object[]",
+        fields: {
+          heading: { t: "string" },
+          body: { t: "string" },
+          cites: CITE_ARR,
+          footnote: { t: "string", optional: true },
+        },
       },
+      banner: { t: "string", optional: true },
     },
-    banner: { t: "string", optional: true },
   },
-  preparation: {
-    title: { t: "string" },
-    subtitle: { t: "string", optional: true },
-    items: {
-      t: "object[]",
-      fields: {
-        title: { t: "string" },
-        desc: { t: "string" },
-        url: { t: "string", optional: true },
-        warning: { t: "string", optional: true },
+  checklist: {
+    top: { title: { t: "string" } },
+    visual: {
+      subtitle: { t: "string", optional: true },
+      items: {
+        t: "object[]",
+        fields: {
+          title: { t: "string" },
+          desc: { t: "string" },
+          url: { t: "string", optional: true },
+          warning: { t: "string", optional: true },
+        },
       },
     },
   },
   closing: {
-    title: { t: "string" },
-    timeline: {
-      t: "object[]",
-      fields: {
-        time: { t: "string" },
-        duration: { t: "string" },
-        desc: { t: "string" },
+    top: { title: { t: "string" } },
+    visual: {
+      timeline: {
+        t: "object[]",
+        fields: {
+          time: { t: "string" },
+          duration: { t: "string" },
+          desc: { t: "string" },
+        },
       },
+      closing_message: { t: "string" },
+      closing_sub: { t: "string", optional: true },
+      conference: { t: "string", optional: true },
     },
-    closing_message: { t: "string" },
-    closing_sub: { t: "string", optional: true },
-    conference: { t: "string", optional: true },
   },
   references: {
-    title: { t: "string" },
+    top: { title: { t: "string" } },
+  },
+  statement: {
+    top: { title: { t: "string", optional: true } },
+    visual: {
+      quote: { t: "string", optional: true },
+      attribution: { t: "string", optional: true },
+      eyebrow: { t: "string", optional: true },
+    },
+  },
+  "number-cards": {
+    top: { title: { t: "string" } },
+    visual: {
+      items: {
+        t: "object[]",
+        optional: true,
+        fields: {
+          heading: { t: "string" },
+          body: { t: "string" },
+          detail: { t: "string", optional: true },
+          footer: { t: "string", optional: true },
+        },
+      },
+    },
   },
 };
-
-// step-1 .. step-7 share the same schema
-for (let i = 1; i <= 7; i++) {
-  SCHEMAS[`step-${i}`] = {
-    title: { t: "string" },
-    screenshot: { t: "string" },
-    note: { t: "string", optional: true },
-  };
-}
 
 export interface ValidationResult {
   errors: string[];
@@ -210,11 +264,21 @@ export function validateSlides(slides: SlideData[]): ValidationResult {
     if (seen.has(slide.id)) errors.push(`duplicate slide id: ${slide.id}`);
     seen.add(slide.id);
 
-    const schema = SCHEMAS[slide.id];
-    if (!schema) continue; // unknown id — forward-compatible
+    const layout = (slide as Record<string, unknown>).layout;
+    if (typeof layout !== "string" || !layout) {
+      errors.push(`${slide.id}.layout: missing (expected a layout name, e.g. "title", "grid")`);
+      continue;
+    }
 
-    for (const [k, kind] of Object.entries(schema)) {
+    const schema = SCHEMAS[layout];
+    if (!schema) continue; // unknown layout — forward-compatible (render.ts throws if unrenderable)
+
+    const visual = ((slide as Record<string, unknown>).visual ?? {}) as Record<string, unknown>;
+    for (const [k, kind] of Object.entries(schema.top ?? {})) {
       checkField(`${slide.id}.${k}`, (slide as Record<string, unknown>)[k], kind, errors, warnings);
+    }
+    for (const [k, kind] of Object.entries(schema.visual ?? {})) {
+      checkField(`${slide.id}.visual.${k}`, visual[k], kind, errors, warnings);
     }
   }
   return { errors, warnings };

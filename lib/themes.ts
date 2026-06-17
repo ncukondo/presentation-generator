@@ -2,7 +2,7 @@
  * Theme system — palettes + fonts resolved from the `theme:` block in slides.yaml.
  *
  * Goal: make the color palette swappable per project ("内容に合った配色を準備")
- * without touching any pages/*.ts. `lib/theme.ts` consumes `resolveTheme()` /
+ * without touching any renderer. `lib/theme.ts` consumes `resolveTheme()` /
  * `resolveFonts()` and re-exports `C` / `FONT*` with the SAME field shape, so
  * downstream layout code is unaffected.
  *

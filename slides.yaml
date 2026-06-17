@@ -1,14 +1,21 @@
 # ============================================================================
-# slides.yaml — スライドの内容・ナレーション原稿の一元管理ファイル
+# slides.yaml — スライドの内容・ナレーション原稿の一元管理ファイル（データ駆動モード）
 #
-# 各スライドは `id` で識別される。TypeScript 側では getSlide(id) で内容を取得する。
-# レイアウト・スタイリングは pages/*.ts に定義されており、ここには純粋なコンテンツのみ記述。
+# 各スライドは `layout` で描画方法を宣言し、`visual` にレイアウト別パラメータを持つ。
+# 汎用レンダラ (lib/render.ts) が `layout` を見て描画する。スライドの追加・編集・
+# 並べ替え・複製は、このファイルの編集だけで完結する（pages/*.ts は廃止）。
 #
 # 構造:
-#   - id: スライドの一意識別子（pages/*.ts の getSlide() 呼び出しと対応）
-#   - title: スライドタイトル
-#   - narration: TTS で読み上げるナレーション原稿（省略可）
-#   - その他のフィールド: 各スライドのレイアウトに応じたデータ（cards, items, steps 等）
+#   - id:        スライドの一意識別子（重複不可。表示順は配列の並び順）
+#   - layout:    レンダラ名（title / grid / evidence / steps / step-detail /
+#                risks / checklist / closing / references / statement / number-cards）
+#   - title:     スライドタイトル（多くの layout で共通）
+#   - narration: TTS・動画で読み上げる原稿（省略可。指定時は PowerPoint ノートにも入る）
+#   - notes:     PowerPoint ノート専用メモ（省略可。TTS では読み上げない。ナレーション不要の
+#                デッキで登壇メモを書く用途。ノート欄に入るのは notes ?? narration）
+#   - visual:    layout 別のデータ（subtitle, cards, items, steps 等）
+#
+# layout ごとの visual スキーマは docs/layouts.md を参照。
 #
 # ナレーション修正例:
 #   yq '(.slides[] | select(.id == "background")).narration = "新しいナレーション"' -i slides.yaml
@@ -32,214 +39,287 @@ theme:
 slides:
   # --------------------------------------------------------------------------
   # タイトルスライド
-  # フィールド: title, subtitle, presenter, narration
+  # layout: title / visual: { subtitle, presenter }
   # --------------------------------------------------------------------------
   - id: title
+    layout: title
     title: |-
       サンプルプレゼンテーション
       タイトルをここに記入
-    subtitle: プレゼンテーションのサブタイトル
-    presenter: 発表者名・所属・日付などをここに記入
+    visual:
+      subtitle: プレゼンテーションのサブタイトル
+      presenter: 発表者名・所属・日付などをここに記入
+    # narration: TTS・動画で読み上げる原稿（指定時は PowerPoint ノートにも入る）
     narration: |
       ここにタイトルスライドのナレーション原稿を記載します。プレゼンテーションの導入として、視聴者への挨拶や概要を述べます。
+    # notes: PowerPoint ノート専用メモ（TTS では読み上げない）。ナレーション不要の
+    #        デッキで登壇メモ・備考を書く用途。ノート欄に入るのは notes ?? narration。
+    # notes: |
+    #   登壇時の口頭補足やタイムキープのメモをここに記載します（音声化されません）。
 
   # --------------------------------------------------------------------------
   # 背景・課題スライド（3カラムカード型）
-  # フィールド: title, subtitle, cards[].{heading, body, detail, cites[]}, narration
+  # layout: grid / visual: { subtitle, cards[].{heading, body, detail, cites[]} }
   # cites にはパンドック形式の引用キーを指定（lib/cite.ts で解決）
   # --------------------------------------------------------------------------
   - id: background
+    layout: grid
     title: "背景：テーマを取り巻く現状"
-    subtitle: 解決すべき3つの課題
-    cards:
-      - heading: 課題1のタイトル
-        body: 課題1の概要を簡潔に記述
-        detail: 具体的なデータや事例を記載
-        cites: []
-      - heading: 課題2のタイトル
-        body: 課題2の概要を簡潔に記述
-        detail: 具体的なデータや事例を記載
-        cites: []
-      - heading: 課題3のタイトル
-        body: 課題3の概要を簡潔に記述
-        detail: 具体的なデータや事例を記載
-        cites: []
+    visual:
+      subtitle: 解決すべき3つの課題
+      cards:
+        - heading: 課題1のタイトル
+          body: 課題1の概要を簡潔に記述
+          detail: 具体的なデータや事例を記載
+          cites: []
+        - heading: 課題2のタイトル
+          body: 課題2の概要を簡潔に記述
+          detail: 具体的なデータや事例を記載
+          cites: []
+        - heading: 課題3のタイトル
+          body: 課題3の概要を簡潔に記述
+          detail: 具体的なデータや事例を記載
+          cites: []
     narration: |
       ここに背景説明のナレーション原稿を記載します。3つの課題についてそれぞれ説明を行います。
+    # notes: |        # narration の代わりにノート専用メモを書く（TTS では読み上げない）
+    #   登壇メモ・備考をここに記載。
 
   # --------------------------------------------------------------------------
   # ツール・手法紹介スライド（2カラム: 特徴一覧 + エビデンス）
-  # フィールド: title, subtitle, features[], evidence_heading, evidence[].{heading, body, cite}, figure?, url, narration
+  # layout: evidence / visual: { subtitle, features[], evidence_heading,
+  #         evidence[].{heading, body, cite}, figure?, figure_cite?, url }
   # --------------------------------------------------------------------------
   - id: notebooklm
+    layout: evidence
     title: ツール・手法の紹介
-    subtitle: ツール名やアプローチの概要
-    features:
-      - "特徴1: 主要な機能や利点を記載"
-      - "特徴2: 他の特徴を記載"
-      - "特徴3: さらなる特徴を記載"
-      - "特徴4: 補足情報や注意点"
-    evidence_heading: 活用事例・エビデンス
-    # figure: figure.png          # assets/ 内の補足画像（省略可）
-    # figure_cite: ""              # 補足画像の引用キー（省略可）
-    evidence:
-      - heading: 活用事例1
-        body: 事例の概要を記載
-        cite: ""
-      - heading: 活用事例2
-        body: 事例の概要を記載
-        cite: ""
-      - heading: 活用事例3
-        body: 事例の概要を記載
-        cite: ""
-    url: example.com
+    visual:
+      subtitle: ツール名やアプローチの概要
+      features:
+        - "特徴1: 主要な機能や利点を記載"
+        - "特徴2: 他の特徴を記載"
+        - "特徴3: さらなる特徴を記載"
+        - "特徴4: 補足情報や注意点"
+      evidence_heading: 活用事例・エビデンス
+      # figure: figure.png          # assets/ 内の補足画像（省略可）
+      # figure_cite: ""              # 補足画像の引用キー（省略可）
+      evidence:
+        - heading: 活用事例1
+          body: 事例の概要を記載
+          cite: ""
+        - heading: 活用事例2
+          body: 事例の概要を記載
+          cite: ""
+        - heading: 活用事例3
+          body: 事例の概要を記載
+          cite: ""
+      url: example.com
     narration: |
       ここにツール・手法紹介のナレーション原稿を記載します。
+    # notes: |        # narration の代わりにノート専用メモを書く（TTS では読み上げない）
+    #   登壇メモ・備考をここに記載。
 
   # --------------------------------------------------------------------------
   # ステップ概要スライド（7ステップの一覧表示）
-  # フィールド: title, subtitle, steps[], note, narration
+  # layout: steps / visual: { subtitle, steps[], note }
   # --------------------------------------------------------------------------
   - id: steps-overview
+    layout: steps
     title: ワークフローの全体像
-    subtitle: 実践する流れ
-    steps:
-      - ステップ1のタイトル
-      - ステップ2のタイトル
-      - ステップ3のタイトル
-      - ステップ4のタイトル
-      - ステップ5のタイトル
-      - ステップ6のタイトル
-      - ステップ7のタイトル
-    note: ※ 各ステップの詳細は次のスライドで説明します
+    visual:
+      subtitle: 実践する流れ
+      steps:
+        - ステップ1のタイトル
+        - ステップ2のタイトル
+        - ステップ3のタイトル
+        - ステップ4のタイトル
+        - ステップ5のタイトル
+        - ステップ6のタイトル
+        - ステップ7のタイトル
+      note: ※ 各ステップの詳細は次のスライドで説明します
     narration: |
       ここにステップ概要のナレーション原稿を記載します。
+    # notes: |        # narration の代わりにノート専用メモを書く（TTS では読み上げない）
+    #   登壇メモ・備考をここに記載。
 
   # --------------------------------------------------------------------------
   # 各ステップ詳細スライド（スクリーンショット付き）
-  # フィールド: title, screenshot, note, narration
-  # screenshot は screenshots/ ディレクトリ内のファイル名を指定
+  # layout: step-detail / visual: { step(番号), screenshot, note,
+  #         任意: imgH/imgW/imgY, arrows[], textAnnotations[], overlayImages[], rectAnnotations[] }
+  # screenshot は screenshots/ ディレクトリ内のファイル名を指定。
+  # タイトルは "Step <step>：<title>" として描画される。
   # --------------------------------------------------------------------------
   - id: step-1
+    layout: step-detail
     title: ステップ1のタイトル
-    screenshot: step-01.png
-    note: "ステップ1の補足説明"
+    visual:
+      step: 1
+      screenshot: step-01.png
+      note: "ステップ1の補足説明"
     narration: |
       ステップ1のナレーション原稿をここに記載します。
+    # notes: |        # narration の代わりにノート専用メモを書く（TTS では読み上げない）
+    #   登壇メモ・備考をここに記載。
 
   - id: step-2
+    layout: step-detail
     title: ステップ2のタイトル
-    screenshot: step-02.png
-    note: ステップ2の補足説明
+    visual:
+      step: 2
+      screenshot: step-02.png
+      note: ステップ2の補足説明
     narration: |
       ステップ2のナレーション原稿をここに記載します。
+    # notes: |        # narration の代わりにノート専用メモを書く（TTS では読み上げない）
+    #   登壇メモ・備考をここに記載。
 
   - id: step-3
+    layout: step-detail
     title: ステップ3のタイトル
-    screenshot: step-03.png
-    note: ステップ3の補足説明
+    visual:
+      step: 3
+      screenshot: step-03.png
+      note: ステップ3の補足説明
     narration: |
       ステップ3のナレーション原稿をここに記載します。
+    # notes: |        # narration の代わりにノート専用メモを書く（TTS では読み上げない）
+    #   登壇メモ・備考をここに記載。
 
   - id: step-4
+    layout: step-detail
     title: ステップ4のタイトル
-    screenshot: step-04.png
-    note: ステップ4の補足説明
+    visual:
+      step: 4
+      screenshot: step-04.png
+      note: ステップ4の補足説明
     narration: |
       ステップ4のナレーション原稿をここに記載します。
+    # notes: |        # narration の代わりにノート専用メモを書く（TTS では読み上げない）
+    #   登壇メモ・備考をここに記載。
 
   - id: step-5
+    layout: step-detail
     title: ステップ5のタイトル
-    screenshot: step-05.png
-    note: ステップ5の補足説明
+    visual:
+      step: 5
+      screenshot: step-05.png
+      note: ステップ5の補足説明
     narration: |
       ステップ5のナレーション原稿をここに記載します。
+    # notes: |        # narration の代わりにノート専用メモを書く（TTS では読み上げない）
+    #   登壇メモ・備考をここに記載。
 
   - id: step-6
+    layout: step-detail
     title: ステップ6のタイトル
-    screenshot: step-06.png
-    note: ステップ6の補足説明
+    visual:
+      step: 6
+      screenshot: step-06.png
+      note: ステップ6の補足説明
     narration: |
       ステップ6のナレーション原稿をここに記載します。
+    # notes: |        # narration の代わりにノート専用メモを書く（TTS では読み上げない）
+    #   登壇メモ・備考をここに記載。
 
   - id: step-7
+    layout: step-detail
     title: ステップ7のタイトル
-    screenshot: step-07.png
-    note: ステップ7の補足説明
+    visual:
+      step: 7
+      screenshot: step-07.png
+      note: ステップ7の補足説明
     narration: |
       ステップ7のナレーション原稿をここに記載します。
+    # notes: |        # narration の代わりにノート専用メモを書く（TTS では読み上げない）
+    #   登壇メモ・備考をここに記載。
 
   # --------------------------------------------------------------------------
   # リスクと品質管理スライド（2カラム: リスク + 対策）
-  # フィールド: title, risks_heading, risks[], solutions_heading, solutions[], banner, narration
+  # layout: risks / visual: { risks_heading, risks[], solutions_heading, solutions[], banner }
   # --------------------------------------------------------------------------
   - id: risks
+    layout: risks
     title: リスクと品質管理
-    risks_heading: 留意すべきリスク
-    risks:
-      - heading: リスク1のタイトル
-        body: リスク1の説明
-        cites: []
-      - heading: リスク2のタイトル
-        body: リスク2の説明
-        cites: []
-    solutions_heading: 対策のポイント
-    solutions:
-      - heading: 対策1のタイトル
-        body: 対策1の説明
-      - heading: 対策2のタイトル
-        body: 対策2の説明
-        cites: []
-    banner: 重要なメッセージをここに記載
+    visual:
+      risks_heading: 留意すべきリスク
+      risks:
+        - heading: リスク1のタイトル
+          body: リスク1の説明
+          cites: []
+        - heading: リスク2のタイトル
+          body: リスク2の説明
+          cites: []
+      solutions_heading: 対策のポイント
+      solutions:
+        - heading: 対策1のタイトル
+          body: 対策1の説明
+        - heading: 対策2のタイトル
+          body: 対策2の説明
+          cites: []
+      banner: 重要なメッセージをここに記載
     narration: |
       ここにリスクと品質管理のナレーション原稿を記載します。
+    # notes: |        # narration の代わりにノート専用メモを書く（TTS では読み上げない）
+    #   登壇メモ・備考をここに記載。
 
   # --------------------------------------------------------------------------
   # 事前準備スライド（2x2 カード型チェックリスト）
-  # フィールド: title, subtitle, items[].{title, desc, url?, warning?}, narration
+  # layout: checklist / visual: { subtitle, items[].{title, desc, url?, warning?} }
   # --------------------------------------------------------------------------
   - id: preparation
+    layout: checklist
     title: 事前準備のお願い
-    subtitle: 事前にご準備ください
-    items:
-      - title: 準備項目1
-        desc: 準備項目1の説明
-      - title: 準備項目2
-        desc: 準備項目2の説明
-        url: "https://example.com/"
-      - title: 準備項目3
-        desc: 準備項目3の説明
-      - title: 準備項目4
-        desc: 準備項目4の説明
-        warning: 注意事項があればここに記載
+    visual:
+      subtitle: 事前にご準備ください
+      items:
+        - title: 準備項目1
+          desc: 準備項目1の説明
+        - title: 準備項目2
+          desc: 準備項目2の説明
+          url: "https://example.com/"
+        - title: 準備項目3
+          desc: 準備項目3の説明
+        - title: 準備項目4
+          desc: 準備項目4の説明
+          warning: 注意事項があればここに記載
     narration: |
       ここに事前準備のナレーション原稿を記載します。
+    # notes: |        # narration の代わりにノート専用メモを書く（TTS では読み上げない）
+    #   登壇メモ・備考をここに記載。
 
   # --------------------------------------------------------------------------
   # クロージングスライド（タイムライン + 締めメッセージ）
-  # フィールド: title, timeline[].{time, duration, desc}, closing_message, closing_sub, conference, narration
+  # layout: closing / visual: { timeline[].{time, duration, desc}, closing_message, closing_sub, conference }
   # --------------------------------------------------------------------------
   - id: closing
+    layout: closing
     title: 当日の流れ
-    timeline:
-      - time: パート1
-        duration: 10分
-        desc: パート1の内容説明
-      - time: パート2
-        duration: 35分
-        desc: パート2の内容説明
-      - time: パート3
-        duration: 15分
-        desc: パート3の内容説明
-    closing_message: |-
-      締めのメッセージをここに記載
-    closing_sub: 補足メッセージ
-    conference: イベント名・日付をここに記入
+    visual:
+      timeline:
+        - time: パート1
+          duration: 10分
+          desc: パート1の内容説明
+        - time: パート2
+          duration: 35分
+          desc: パート2の内容説明
+        - time: パート3
+          duration: 15分
+          desc: パート3の内容説明
+      closing_message: |-
+        締めのメッセージをここに記載
+      closing_sub: 補足メッセージ
+      conference: イベント名・日付をここに記入
     narration: |
       ここにクロージングのナレーション原稿を記載します。
+    # notes: |        # narration の代わりにノート専用メモを書く（TTS では読み上げない）
+    #   登壇メモ・備考をここに記載。
 
   # --------------------------------------------------------------------------
   # 文献一覧スライド（自動生成 — cite() で参照された文献が一覧表示される）
+  # layout: references。引用が1件も無い場合はこのスライドは生成されない。
   # --------------------------------------------------------------------------
   - id: references
+    layout: references
     title: References
+    # notes: |        # この自動生成スライドにも登壇メモを付けられる（TTS では読み上げない）
+    #   登壇メモ・備考をここに記載。

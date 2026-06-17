@@ -8,7 +8,14 @@ import { parse } from "yaml";
 export interface SlideData {
   id: string;
   title: string;
+  /** Which renderer to dispatch to (data-driven mode; see lib/render.ts). */
+  layout?: string;
+  /** Layout-specific parameters consumed by the renderer. */
+  visual?: Record<string, unknown>;
+  /** TTS / 動画の読み上げ原稿。指定時は PowerPoint ノートにも入る（省略可）。 */
   narration?: string;
+  /** PowerPoint ノート専用メモ。TTS/動画では読み上げない。`narration` より優先（省略可）。 */
+  notes?: string;
   [key: string]: unknown;
 }
 
