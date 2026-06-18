@@ -108,31 +108,26 @@ const SCHEMAS: Record<string, LayoutSchema> = {
   title: {
     top: { title: { t: "string" } },
     visual: {
-      subtitle: { t: "string" },
+      // subtitle は任意（必須にすると題名の言い換えなど無意味な重複を誘発するため）
+      subtitle: { t: "string", optional: true },
       presenter: { t: "string" },
     },
   },
-  grid: {
+  section: {
     top: { title: { t: "string" } },
     visual: {
-      subtitle: { t: "string" },
-      cards: {
-        t: "object[]",
-        fields: {
-          heading: { t: "string" },
-          body: { t: "string" },
-          detail: { t: "string", optional: true },
-          cites: CITE_ARR,
-        },
-      },
+      // number は文字列/数値どちらも許容するため宣言しない（render 側で String 化）
+      eyebrow: { t: "string", optional: true },
+      subtitle: { t: "string", optional: true },
     },
   },
   evidence: {
     top: { title: { t: "string" } },
     visual: {
-      subtitle: { t: "string" },
+      // subtitle / evidence_heading は任意（重複誘発を避けるため非必須）
+      subtitle: { t: "string", optional: true },
       features: { t: "string[]" },
-      evidence_heading: { t: "string" },
+      evidence_heading: { t: "string", optional: true },
       evidence: {
         t: "object[]",
         fields: {
@@ -229,9 +224,13 @@ const SCHEMAS: Record<string, LayoutSchema> = {
       eyebrow: { t: "string", optional: true },
     },
   },
+  // number-cards は旧 `grid` を統合した「番号カード」唯一の layout。
+  // items（or cards）2-4 件。subtitle/cites は grid 由来の任意フィールド。
   "number-cards": {
     top: { title: { t: "string" } },
     visual: {
+      subtitle: { t: "string", optional: true },
+      badge: { t: "string", optional: true }, // "number"(既定) | "none"（番号バッジ省略）
       items: {
         t: "object[]",
         optional: true,
@@ -240,8 +239,96 @@ const SCHEMAS: Record<string, LayoutSchema> = {
           body: { t: "string" },
           detail: { t: "string", optional: true },
           footer: { t: "string", optional: true },
+          cites: CITE_ARR,
+          icon: { t: "string", optional: true }, // 指定時は番号をアイコンに差し替え
         },
       },
+      cards: {
+        t: "object[]",
+        optional: true,
+        fields: {
+          heading: { t: "string" },
+          body: { t: "string" },
+          detail: { t: "string", optional: true },
+          footer: { t: "string", optional: true },
+          cites: CITE_ARR,
+          icon: { t: "string", optional: true },
+        },
+      },
+    },
+  },
+  bullets: {
+    top: { title: { t: "string" } },
+    visual: {
+      subtitle: { t: "string", optional: true },
+      // items は string か {text, level?, cites?, bold?}。混在のため render 側で正規化。
+      note: { t: "string", optional: true },
+    },
+  },
+  agenda: {
+    top: { title: { t: "string" } },
+    visual: {
+      // items は string か {title, desc?}。混在のため render 側で正規化。
+    },
+  },
+  figure: {
+    top: { title: { t: "string" } },
+    visual: {
+      image: { t: "string" },
+      subtitle: { t: "string", optional: true },
+      caption: { t: "string", optional: true },
+      cite: { t: "string", optional: true },
+    },
+  },
+  split: {
+    top: { title: { t: "string" } },
+    visual: {
+      // items は string か {text, level?, cites?, bold?}。混在のため render 側で正規化。
+      image: { t: "string", optional: true },
+      imageSide: { t: "string", optional: true },
+      subtitle: { t: "string", optional: true },
+      caption: { t: "string", optional: true },
+      note: { t: "string", optional: true },
+    },
+  },
+  "big-stat": {
+    top: { title: { t: "string" } },
+    visual: {
+      subtitle: { t: "string", optional: true },
+      stats: {
+        t: "object[]",
+        fields: {
+          value: { t: "string" },
+          label: { t: "string", optional: true },
+          sub: { t: "string", optional: true },
+        },
+      },
+      note: { t: "string", optional: true },
+    },
+  },
+  chart: {
+    top: { title: { t: "string" } },
+    visual: {
+      subtitle: { t: "string", optional: true },
+      chartType: { t: "string", optional: true },
+      categories: { t: "string[]" },
+      series: {
+        t: "object[]",
+        fields: {
+          name: { t: "string", optional: true },
+          // values は number[]。専用 kind が無いので存在のみ render 側で扱う。
+        },
+      },
+      note: { t: "string", optional: true },
+    },
+  },
+  table: {
+    top: { title: { t: "string" } },
+    visual: {
+      subtitle: { t: "string", optional: true },
+      headers: { t: "string[]", optional: true },
+      // rows は string[][]。専用 kind が無いので render 側で扱う。
+      note: { t: "string", optional: true },
     },
   },
 };

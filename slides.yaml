@@ -7,8 +7,10 @@
 #
 # 構造:
 #   - id:        スライドの一意識別子（重複不可。表示順は配列の並び順）
-#   - layout:    レンダラ名（title / grid / evidence / steps / step-detail /
-#                risks / checklist / closing / references / statement / number-cards）
+#   - layout:    レンダラ名（title / agenda / bullets / section / number-cards /
+#                evidence / steps / step-detail / figure / split / chart / table /
+#                big-stat / risks / checklist / statement / closing / references）
+#                ※ 旧 grid は number-cards に統合（subtitle + cites を吸収）
 #   - title:     スライドタイトル（多くの layout で共通）
 #   - narration: TTS・動画で読み上げる原稿（省略可。指定時は PowerPoint ノートにも入る）
 #   - notes:     PowerPoint ノート専用メモ（省略可。TTS では読み上げない。ナレーション不要の
@@ -58,16 +60,42 @@ slides:
     #   登壇時の口頭補足やタイムキープのメモをここに記載します（音声化されません）。
 
   # --------------------------------------------------------------------------
-  # 背景・課題スライド（3カラムカード型）
-  # layout: grid / visual: { subtitle, cards[].{heading, body, detail, cites[]} }
-  # cites にはパンドック形式の引用キーを指定（lib/cite.ts で解決）
+  # 目次・アウトラインスライド（章立てを番号付きで縦並び）
+  # layout: agenda / visual: { items[]: string | {title, desc?} }（3-7項目向け）
+  # --------------------------------------------------------------------------
+  - id: agenda
+    layout: agenda
+    title: 本日の内容
+    visual:
+      items:
+        - title: 背景と目的
+          desc: テーマを取り巻く現状と本発表のねらい
+        - title: 方法
+          desc: 対象・手順・評価指標
+        - title: 結果
+          desc: 主要な所見をグラフ・表で提示
+        - title: 考察
+          desc: 結果の解釈・限界・今後の展望
+        - title: まとめ
+    narration: |
+      ここに目次のナレーション原稿を記載します。本日の発表の流れを示します。
+
+  # --------------------------------------------------------------------------
+  # 背景・課題スライド（番号カード型 — 旧 grid を統合した number-cards）
+  # layout: number-cards / visual: { subtitle?, badge?, items[].{heading, body, detail?, cites?[], footer?, icon?} }
+  # items は 2-4 件（cards でも可）。cites にパンドック形式の引用キーを指定（lib/cite.ts で解決）
+  # バッジ（カード上の丸）は3モード:
+  #   ・既定        … "01" "02" … の連番
+  #   ・badge: none … 番号バッジを省略（カードが上に詰まる）
+  #   ・item.icon   … そのカードだけ番号をアイコンに差し替え（MDI 名 or lib/icons.ts のキー）
   # --------------------------------------------------------------------------
   - id: background
-    layout: grid
+    layout: number-cards
     title: "背景：テーマを取り巻く現状"
     visual:
       subtitle: 解決すべき3つの課題
-      cards:
+      # badge: none        # ← 番号が無意味な場合は省略できる
+      items:
         - heading: 課題1のタイトル
           body: 課題1の概要を簡潔に記述
           detail: 具体的なデータや事例を記載
@@ -84,6 +112,54 @@ slides:
       ここに背景説明のナレーション原稿を記載します。3つの課題についてそれぞれ説明を行います。
     # notes: |        # narration の代わりにノート専用メモを書く（TTS では読み上げない）
     #   登壇メモ・備考をここに記載。
+
+  # --------------------------------------------------------------------------
+  # 特徴・ポイント紹介（番号ではなくアイコンのバッジ — 連番に意味が無い並列要素向け）
+  # 各カードに icon を指定すると番号の代わりにアイコンが入る。badge: none で全省略も可。
+  # --------------------------------------------------------------------------
+  - id: features
+    layout: number-cards
+    title: 本手法の特長
+    visual:
+      subtitle: 3つのポイント（番号ではなくアイコン）
+      items:
+        - heading: 高速
+          body: 処理が速い
+          detail: 大規模データでも待たせない
+          icon: rocket
+        - heading: 安全
+          body: 検証済みで堅牢
+          detail: 多段のチェックで品質を担保
+          icon: shieldCheck
+        - heading: 簡単
+          body: 学習コストが低い
+          detail: 設定ファイル1つで完結
+          icon: lightbulb
+    narration: |
+      ここに特長紹介のナレーション原稿を記載します。
+
+  # --------------------------------------------------------------------------
+  # 箇条書き本文スライド（タイトル＋階層リスト — 学術発表の最頻出パターン）
+  # layout: bullets / visual: { subtitle?, items[]: string | {text, level?, cites?[], bold?}, note? }
+  # level 1 で字下げのサブ項目。序論・考察・まとめ等の散文的な列挙に使う。
+  # --------------------------------------------------------------------------
+  - id: objective
+    layout: bullets
+    title: 研究の目的
+    visual:
+      subtitle: 本研究が明らかにすること
+      items:
+        - text: 主要な研究課題（リサーチクエスチョン）を1文で提示
+          bold: true
+        - 背景にある先行研究の到達点と残された課題
+        - text: 既存研究で十分に検討されていない点
+          level: 1
+        - text: 本研究で新たに検証する仮説
+          level: 1
+        - 本発表で示す主要なアウトカム
+      note: ※ 箇条書きは level で字下げを表現できる
+    narration: |
+      ここに研究目的のナレーション原稿を記載します。
 
   # --------------------------------------------------------------------------
   # ツール・手法紹介スライド（2カラム: 特徴一覧 + エビデンス）
@@ -286,6 +362,125 @@ slides:
       ここに事前準備のナレーション原稿を記載します。
     # notes: |        # narration の代わりにノート専用メモを書く（TTS では読み上げない）
     #   登壇メモ・備考をここに記載。
+
+  # --------------------------------------------------------------------------
+  # セクション区切り（章扉）— 深い primary 全面＋章番号＋章タイトル
+  # layout: section / visual: { number?, eyebrow?, subtitle? }（すべて任意）
+  # statement（引用調）とは別用途。大きな章の頭に置く。
+  # --------------------------------------------------------------------------
+  - id: section-results
+    layout: section
+    title: 結果
+    visual:
+      number: "03"
+      eyebrow: SECTION
+      subtitle: 主要な所見をグラフ・表・図版で提示する
+    # notes: |        # ナレーション不要なら notes に登壇メモだけ書ける
+    #   章の切り替えメモをここに記載。
+
+  # --------------------------------------------------------------------------
+  # 図版スライド（大きな図1枚＋キャプション＋引用 — 結果の図表用）
+  # layout: figure / visual: { image, subtitle?, caption?, cite? }
+  # image は assets/ 内のファイル名。アスペクト比維持で領域いっぱいに配置される。
+  # --------------------------------------------------------------------------
+  - id: figure-demo
+    layout: figure
+    title: 主要な結果（図版）
+    visual:
+      subtitle: 介入群と対照群の反応推移
+      image: sample-figure.png
+      caption: 図1. 経時的な反応率の変化（介入群 vs 対照群）
+      # cite: "your-citekey"     # 引用キーがあれば APA インテキストで併記
+    narration: |
+      ここに図版スライドのナレーション原稿を記載します。
+
+  # --------------------------------------------------------------------------
+  # グラフスライド（PowerPoint で編集できるネイティブグラフ）
+  # layout: chart / visual: { chartType, categories[], series[].{name, values[]}, subtitle?, note?, showValue? }
+  #   chartType: bar(縦棒) / barh(横棒) / line / area / pie / doughnut
+  #   系列色はテーマの step1..7 を自動割当て（theme 差し替えに追従）
+  # --------------------------------------------------------------------------
+  - id: chart-demo
+    layout: chart
+    title: 介入前後のスコア比較
+    visual:
+      subtitle: 3 施設での平均値（縦棒グラフ）
+      chartType: bar
+      categories: ["A 施設", "B 施設", "C 施設"]
+      series:
+        - name: 介入前
+          values: [42, 55, 38]
+        - name: 介入後
+          values: [68, 72, 61]
+      note: グラフは PowerPoint 上でデータ編集可能なネイティブ figure として埋め込まれる
+    narration: |
+      ここにグラフスライドのナレーション原稿を記載します。
+
+  # --------------------------------------------------------------------------
+  # 表スライド（PowerPoint で編集できるネイティブ表）
+  # layout: table / visual: { headers[], rows[][], subtitle?, note?, colW[]? }
+  #   header 行は primary 背景＋白字、本文は白/オフ白の交互ストライプ
+  # --------------------------------------------------------------------------
+  - id: table-demo
+    layout: table
+    title: プラン比較表
+    visual:
+      subtitle: 主要 3 プランの比較
+      headers: ["項目", "Free", "Pro", "Enterprise"]
+      rows:
+        - ["月額", "0 円", "1,500 円", "要問合せ"]
+        - ["ユーザー数", "1", "10", "無制限"]
+        - ["サポート", "なし", "メール", "専任担当"]
+        - ["SLA", "—", "99.5%", "99.9%"]
+      note: 先頭列は行ラベルとして強調表示される
+    narration: |
+      ここに表スライドのナレーション原稿を記載します。
+
+  # --------------------------------------------------------------------------
+  # 巨大数値スライド（KPI・統計値のインパクト提示 — 1-3 個）
+  # layout: big-stat / visual: { subtitle?, stats[].{value, label?, sub?}, note? }
+  # value は "95%" のように単位込みで引用符付き推奨（value のみ必須）
+  # --------------------------------------------------------------------------
+  - id: keynumbers
+    layout: big-stat
+    title: 主要な数値
+    visual:
+      subtitle: 本研究のキーメッセージ
+      stats:
+        - value: "68%"
+          label: 介入群の改善率
+          sub: 対照群比 +27pt
+        - value: "3.2×"
+          label: 反応速度の向上
+          sub: ベースライン比
+        - value: "p<.01"
+          label: 統計的有意差
+          sub: 主要評価項目
+    narration: |
+      ここに主要数値スライドのナレーション原稿を記載します。
+
+  # --------------------------------------------------------------------------
+  # 汎用2カラムスライド（左テキスト/右図 — 図と説明を横に並べる）
+  # layout: split / visual: { subtitle?, items[], image?, imageSide?(left/right), caption?, note? }
+  # items は string か {text, level?, cites?, bold?}。imageSide で図の左右を切替（既定 right）。
+  # --------------------------------------------------------------------------
+  - id: discussion
+    layout: split
+    title: 考察
+    visual:
+      subtitle: 結果の解釈
+      items:
+        - text: 介入群で一貫した改善が認められた
+          bold: true
+        - 効果は経時的に拡大し、4週以降で顕著
+        - text: 先行研究の知見と整合する
+          level: 1
+        - 限界：単一施設・短期間の観察
+      image: sample-figure.png
+      imageSide: right
+      caption: 図2. 反応推移（再掲）
+    narration: |
+      ここに考察スライドのナレーション原稿を記載します。
 
   # --------------------------------------------------------------------------
   # クロージングスライド（タイムライン + 締めメッセージ）
