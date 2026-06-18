@@ -20,6 +20,7 @@ import {
 } from "./helpers";
 import { addIcon, ICONS } from "./icons";
 import { cite, getUsedCitations } from "./cite";
+import { darken } from "./color";
 import type { DeckSlide } from "./deck";
 
 // ── Helpers ──────────────────────────────────────────────
@@ -585,27 +586,10 @@ function renderClosing(pres: Pres, s: DeckSlide): Slide {
   const slide = pres.addSlide();
   addNotes(slide, s);
 
+  // Deep slate background (bookends the title) — no overlay, blobs, or accent bar.
   slide.addShape(pres.ShapeType.rect, {
     x: 0, y: 0, w: SLIDE_W, h: SLIDE_H,
-    fill: { color: C.primary },
-  });
-  slide.addShape(pres.ShapeType.rect, {
-    x: 0, y: 0, w: SLIDE_W, h: SLIDE_H,
-    fill: { color: C.primaryLight, transparency: 50 },
-  });
-
-  slide.addShape(pres.ShapeType.ellipse, {
-    x: -2, y: 4, w: 5, h: 5,
-    fill: { color: C.accentLight, transparency: 85 },
-  });
-  slide.addShape(pres.ShapeType.ellipse, {
-    x: 11, y: -2, w: 4, h: 4,
-    fill: { color: C.white, transparency: 90 },
-  });
-
-  slide.addShape(pres.ShapeType.rect, {
-    x: 0, y: SLIDE_H - 0.15, w: SLIDE_W, h: 0.15,
-    fill: { color: C.accent },
+    fill: { color: darken(C.primary, 0.3) },
   });
 
   slide.addText(s.title, {
@@ -741,7 +725,7 @@ function renderStatement(pres: Pres, s: DeckSlide): Slide {
   if (v.eyebrow) {
     slide.addText(v.eyebrow as string, {
       x: 1.4, y: 1.6, w: 10.5, h: 0.5,
-      fontSize: FS.small, fontFace: FONT, color: C.accent,
+      fontSize: FS.small, fontFace: FONT, color: C.darkGray,
       bold: true, align: "left", valign: "middle",
       charSpacing: 4,
     });

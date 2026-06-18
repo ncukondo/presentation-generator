@@ -1,25 +1,30 @@
 import type PptxGenJS from "pptxgenjs";
 import type { Pres, Slide, TextProps } from "./types";
 import {
-  C, FONT, FONT_EN, FS, SLIDE_W, SLIDE_H,
+  C, FONT, FS, SLIDE_W, SLIDE_H,
   MARGIN, CONTENT_W, LINE_THIN,
 } from "./theme";
+import { darken } from "./color";
 
 // ═══════════════════════════════════════════════════════════
 // Slide creation helpers
+//
+// デザイン方針: slate 基調・アクセントは「強調1色」に限定。
+// ヘッダー等の常時アクセント装飾は使わない（各スライドで最も見せたい1点だけに
+// アクセントを使う）。ここでは中立色のクロームのみを提供する。
 // ═══════════════════════════════════════════════════════════
 
-/** Create a content slide with warm background and standard title bar. */
+/** Create a content slide with a calm off-white background and a slate title bar. */
 export function addContentSlide(pres: Pres, title: string): Slide {
   const slide = pres.addSlide();
 
-  // Warm cream background
+  // Calm off-white background
   slide.addShape(pres.ShapeType.rect, {
     x: 0, y: 0, w: SLIDE_W, h: SLIDE_H,
-    fill: { color: C.warmBg },
+    fill: { color: C.offWhite },
   });
 
-  // Title bar
+  // Title bar (primary only — no accent decoration)
   slide.addShape(pres.ShapeType.rect, {
     x: 0, y: 0, w: SLIDE_W, h: 1.05,
     fill: { color: C.primary },
@@ -30,84 +35,64 @@ export function addContentSlide(pres: Pres, title: string): Slide {
     bold: true, align: "left", valign: "middle",
   });
 
-  // Accent stripe below title (slightly thicker)
-  slide.addShape(pres.ShapeType.rect, {
-    x: 0, y: 1.05, w: SLIDE_W, h: 0.08,
-    fill: { color: C.accent },
-  });
-
-  // Thin accent line at bottom
-  slide.addShape(pres.ShapeType.rect, {
-    x: 0, y: SLIDE_H - 0.06, w: SLIDE_W, h: 0.06,
-    fill: { color: C.accent },
+  // Neutral hairline under the header (no accent)
+  slide.addShape(pres.ShapeType.line, {
+    x: 0, y: 1.07, w: SLIDE_W, h: 0,
+    line: { color: C.midGray, width: 1 },
   });
 
   return slide;
 }
 
-/** Create a title slide with decorative circles. */
+/**
+ * Title slide — slate editorial: deep background, a thin vertical accent rule on
+ * the left, left-aligned headline. The accent appears exactly once.
+ */
 export function addTitleSlide(
   pres: Pres,
   mainTitle: string,
   subtitle: string,
   presenterInfo: string,
+  eyebrow?: string,
 ): Slide {
   const slide = pres.addSlide();
 
-  // Base background
-  slide.addShape(pres.ShapeType.rect, {
-    x: 0, y: 0, w: SLIDE_W, h: SLIDE_H,
-    fill: { color: C.primary },
-  });
+  // Deep slate background for depth
+  slide.background = { color: darken(C.primary, 0.3) };
 
-  // Lighter overlay
+  const LX = 1.4;
+  // Left vertical accent rule (the single accent on this slide)
   slide.addShape(pres.ShapeType.rect, {
-    x: 0, y: 0, w: SLIDE_W, h: SLIDE_H,
-    fill: { color: C.primaryLight, transparency: 50 },
-  });
-
-  // Decorative circles for playful feel
-  slide.addShape(pres.ShapeType.ellipse, {
-    x: -1.5, y: -1.5, w: 4.5, h: 4.5,
-    fill: { color: C.white, transparency: 90 },
-  });
-  slide.addShape(pres.ShapeType.ellipse, {
-    x: 10.5, y: 4.5, w: 5, h: 5,
-    fill: { color: C.accentLight, transparency: 82 },
-  });
-  slide.addShape(pres.ShapeType.ellipse, {
-    x: 11.5, y: -2.5, w: 3.5, h: 3.5,
-    fill: { color: C.white, transparency: 92 },
-  });
-
-  // Accent bar at bottom
-  slide.addShape(pres.ShapeType.rect, {
-    x: 0, y: SLIDE_H - 0.15, w: SLIDE_W, h: 0.15,
+    x: LX, y: 2.5, w: 0.09, h: 2.4,
     fill: { color: C.accent },
   });
+
+  if (eyebrow) {
+    slide.addText(eyebrow, {
+      x: LX + 0.4, y: 2.45, w: 10.5, h: 0.5,
+      fontSize: FS.micro, fontFace: FONT, color: C.midGray,
+      align: "left", valign: "middle", charSpacing: 3,
+    });
+  }
 
   slide.addText(mainTitle, {
-    x: 1.0, y: 1.0, w: 11.3, h: 2.6,
-    fontSize: 48, fontFace: FONT, color: C.white,
-    bold: true, align: "center", valign: "middle", wrap: true,
-    lineSpacing: 60,
+    x: LX + 0.36, y: eyebrow ? 2.95 : 2.7, w: 10.8, h: 1.4,
+    fontSize: 50, fontFace: FONT, color: C.white,
+    bold: true, align: "left", valign: "middle", wrap: true,
   });
-  // Accent underline beneath the title
-  slide.addShape(pres.ShapeType.rect, {
-    x: (SLIDE_W - 2.2) / 2, y: 3.75, w: 2.2, h: 0.08,
-    fill: { color: C.accent },
-  });
+
   slide.addText(subtitle, {
-    x: 1.0, y: 3.95, w: 11.3, h: 0.9,
-    fontSize: FS.sectionSub, fontFace: FONT, color: C.white,
-    bold: true, align: "center", valign: "middle", wrap: true,
+    x: LX + 0.4, y: 4.3, w: 10.5, h: 0.8,
+    fontSize: FS.sectionSub, fontFace: FONT, color: C.offWhite,
+    align: "left", valign: "middle", wrap: true,
   });
+
   slide.addText(presenterInfo, {
-    x: 1.0, y: 5.4, w: 11.3, h: 1.2,
-    fontSize: FS.body, fontFace: FONT, color: C.white,
-    align: "center", valign: "middle", wrap: true,
-    lineSpacing: 28,
+    x: 4.5, y: 6.45, w: 7.83, h: 0.55,
+    fontSize: FS.small, fontFace: FONT, color: C.midGray,
+    align: "right", valign: "middle", charSpacing: 1, wrap: true,
   });
+
   return slide;
 }
 
