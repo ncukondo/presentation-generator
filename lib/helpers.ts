@@ -51,7 +51,7 @@ export function addContentSlide(pres: Pres, title: string): Slide {
 export function addTitleSlide(
   pres: Pres,
   mainTitle: string,
-  subtitle: string,
+  subtitle: string | undefined,
   presenterInfo: string,
   eyebrow?: string,
 ): Slide {
@@ -81,11 +81,13 @@ export function addTitleSlide(
     bold: true, align: "left", valign: "middle", wrap: true,
   });
 
-  slide.addText(subtitle, {
-    x: LX + 0.4, y: 4.3, w: 10.5, h: 0.8,
-    fontSize: FS.sectionSub, fontFace: FONT, color: C.offWhite,
-    align: "left", valign: "middle", wrap: true,
-  });
+  if (subtitle) {
+    slide.addText(subtitle, {
+      x: LX + 0.4, y: 4.3, w: 10.5, h: 0.8,
+      fontSize: FS.sectionSub, fontFace: FONT, color: C.offWhite,
+      align: "left", valign: "middle", wrap: true,
+    });
+  }
 
   slide.addText(presenterInfo, {
     x: 4.5, y: 6.45, w: 7.83, h: 0.55,

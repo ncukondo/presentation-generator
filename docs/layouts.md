@@ -26,24 +26,44 @@
 
 ## layout 一覧と visual スキーマ
 
+> **設計方針（重複の回避）**：`subtitle` / `banner` / `note` / `eyebrow` のような
+> **補足・装飾パーツは必須にしない**。必須にすると、書くことが無いときに題名の言い換え等
+> 「無意味な重複コンテンツ」を誘発するため。省略時はレンダラが残り要素を詰めて配置する。
+
 ### `title` — タイトルスライド
 | visual | 型 | 必須 |
 |---|---|---|
-| `subtitle` | string | ✅ |
+| `subtitle` | string | 任意（省略可。書くこと前提にしない） |
 | `presenter` | string | ✅ |
 
-### `grid` — 3カラム番号付きカード（背景・課題向け）
+### `agenda` — 目次・アウトライン（番号付き縦並び）
+3-7 項目向け。番号バッジ＋章タイトル（＋任意の補足）を縦に並べる。
 | visual | 型 | 必須 |
 |---|---|---|
-| `subtitle` | string | ✅ |
-| `cards[]` | `{heading, body, detail?, cites?[]}` | ✅ |
+| `items[]` | `string`（タイトルのみ）or `{title, desc?}` | ✅ |
+
+### `bullets` — タイトル＋階層箇条書き本文
+学術発表で最頻出の素の箇条書き。序論・考察・まとめ等に。`level: 1` で字下げのサブ項目。
+| visual | 型 | 必須 |
+|---|---|---|
+| `subtitle` | string | 任意 |
+| `items[]` | `string` or `{text, level?(0/1), cites?[], bold?}` | ✅ |
+| `note` | string | 任意（下部キャプション） |
+
+### `section` — 章扉・セクション区切り
+深い primary 全面＋単一アクセント＋大きな章番号＋章タイトル。`statement`（引用調）とは住み分け。
+| visual | 型 | 必須 |
+|---|---|---|
+| `number` | string / number | 任意（大きな章番号。例 `"03"`） |
+| `eyebrow` | string | 任意（小見出し。例 `SECTION`） |
+| `subtitle` | string | 任意（章の補足） |
 
 ### `evidence` — 2カラム（左:特徴リスト / 右:エビデンスカード）
 | visual | 型 | 必須 |
 |---|---|---|
-| `subtitle` | string | ✅ |
+| `subtitle` | string | 任意 |
 | `features[]` | string[] | ✅ |
-| `evidence_heading` | string | ✅ |
+| `evidence_heading` | string | 任意（右カラムの見出し） |
 | `evidence[]` | `{heading, body, cite?}` | ✅ |
 | `figure` / `figure_cite` | string | 任意（`assets/` 内の補足画像） |
 | `url` | string | 任意 |
@@ -95,18 +115,97 @@
 `visual` 不要。`cite()` で参照された全文献を APA 形式で2カラム表示する。
 **引用が1件も無い場合、このスライドは生成されない。**
 
-### `statement` — 全面の大きな宣言（章扉・締めの一言）
+### `statement` — 全面の大きな宣言（引用・締めの一言）
+※ 章の区切り（番号付き章扉）は `section` を使う。`statement` は引用・キーメッセージ向け。
 | visual | 型 | 必須 |
 |---|---|---|
 | `quote` | string | 任意（省略時は `title` を使用） |
 | `eyebrow` | string | 任意（小見出し） |
 | `attribution` | string | 任意（帰属） |
 
-### `number-cards` — 汎用 2-4 番号カードグリッド
+### `number-cards` — 汎用 2-4 番号カードグリッド（旧 `grid` を統合）
+旧 `grid`（3列固定＋subtitle＋cites）はこの layout に一本化された。`grid` は別名として残るが
+非推奨（同じレンダラにルートされる）。新規は `number-cards` を使う。
 | visual | 型 | 必須 |
 |---|---|---|
-| `items[]`（or `cards[]`） | `{heading, body, detail?, footer?}` | ✅（2-4件） |
+| `subtitle` | string | 任意（中央見出し。指定時はカードが下がる＝旧 grid の配置） |
+| `badge` | `"number"`（既定）/ `"none"` | 任意（カード上の丸バッジの扱い） |
+| `items[]`（or `cards[]`） | `{heading, body, detail?, cites?[], footer?, icon?}` | ✅（2-4件） |
 | `y` / `h` / `gap` / `color` | number / string | 任意（配置・色の上書き） |
+
+**バッジ（カード上の丸）の3モード** — 連番が無意味になる場合に省略/差し替え可：
+- 既定 … `01` `02` … の連番
+- `badge: none` … 番号を**省略**（バッジ帯を取り除きカードが上に詰まる）
+- `items[].icon` … そのカードだけ番号を**アイコンに差し替え**。値は MDI 名（例 `rocket-launch-outline`）
+  または `lib/icons.ts` のセマンティックキー（例 `rocket` / `shieldCheck` / `lightbulb`）。
+  1枚でも `icon` があるカードはアイコン、無いカードは（`badge: none` でなければ）連番のまま。
+
+### `figure` — 大きな図1枚＋キャプション＋引用（結果の図版用）
+`assets/` 内の画像をコンテンツ領域いっぱいにアスペクト比維持で配置。`evidence.figure`（小さい補足
+画像）とは別用途。
+| visual | 型 | 必須 |
+|---|---|---|
+| `image` | string | ✅（`assets/` 内のファイル名） |
+| `subtitle` | string | 任意 |
+| `caption` | string | 任意（画像下キャプション） |
+| `cite` | string | 任意（APA インテキスト引用を併記） |
+
+### `split` — 汎用2カラム（テキスト ⇔ 図）
+左にテキスト/箇条書き、右に図（`imageSide: left` で左右反転）。「図と説明を横に並べる」最頻出形。
+| visual | 型 | 必須 |
+|---|---|---|
+| `items[]` | `string` or `{text, level?, cites?[], bold?}` | ✅（テキスト側、`bullets` と同形式） |
+| `image` | string | 任意（`assets/` 内のファイル名） |
+| `imageSide` | `"right"`（既定）/ `"left"` | 任意 |
+| `subtitle` / `caption` / `note` | string | 任意 |
+
+### `big-stat` — 巨大数値の強調（KPI・統計値 1-3個）
+「95%」級の大きな数値＋ラベルを 1-3 個並べる。`value` は単位込みで引用符付き推奨（例 `"68%"`）。
+| visual | 型 | 必須 |
+|---|---|---|
+| `stats[]` | `{value, label?, sub?}` | ✅（1-3件。`value` のみ必須） |
+| `subtitle` | string | 任意 |
+| `note` | string | 任意（下部キャプション） |
+
+### `chart` — データグラフ（PowerPoint で編集できるネイティブグラフ）
+`addChart` でネイティブ図表を埋め込む。系列の色はテーマの `step1..7` を自動割当てするので、
+`theme:` を差し替えても配色が追従する。
+| visual | 型 | 必須 |
+|---|---|---|
+| `chartType` | string | 任意（`bar`(縦棒・既定) / `barh`(横棒) / `line` / `area` / `pie` / `doughnut`） |
+| `categories[]` | string[] | ✅（X 軸ラベル。pie/doughnut では各スライスのラベル） |
+| `series[]` | `{name?, values[]}` | ✅（`values` は number[]。pie/doughnut は先頭 series のみ使用） |
+| `subtitle` | string | 任意（タイトル下の中央見出し） |
+| `note` | string | 任意（下部キャプション） |
+| `showValue` | boolean | 任意（棒/線/面でデータ値ラベルを表示。既定 false） |
+
+```yaml
+visual:
+  chartType: bar
+  categories: ["A 施設", "B 施設", "C 施設"]
+  series:
+    - { name: 介入前, values: [42, 55, 38] }
+    - { name: 介入後, values: [68, 72, 61] }
+```
+
+### `table` — 表組み（PowerPoint で編集できるネイティブ表）
+`addTable` でネイティブ表を描く。header 行は primary 背景＋白字、本文は白/オフ白の交互ストライプ、
+先頭列は行ラベルとして太字＋左寄せになる。
+| visual | 型 | 必須 |
+|---|---|---|
+| `headers[]` | string[] | 任意（先頭行。指定時は header スタイル） |
+| `rows[][]` | string[][] | ✅（各行＝セル文字列の配列。列数は揃える） |
+| `subtitle` | string | 任意（タイトル下の中央見出し） |
+| `colW[]` | number[] | 任意（列幅 inch の配列。合計が `CONTENT_W`≈12.13 になるよう調整） |
+| `note` | string | 任意（下部キャプション） |
+
+```yaml
+visual:
+  headers: ["項目", "Free", "Pro"]
+  rows:
+    - ["月額", "0 円", "1,500 円"]
+    - ["SLA",  "—",    "99.5%"]
+```
 
 ---
 
