@@ -209,6 +209,102 @@ visual:
 
 ---
 
+## 図版・メディア系 layout
+
+スライド面に図やメディアを置くための layout 群。補足パーツ（`eyebrow` / `note` / `subtitle` 等）は
+いずれも任意（省略時はレンダラが詰める）。引用は `cite`（単一）/ `cites`（配列）で References に自動収集。
+
+### `demo` — 録画済みデモ動画の埋め込み
+短縮版 mp4 を主役に1枚。ポスター画像（再生前の見た目）は `poster` 省略時に動画名から推定
+（`xxx-short.mp4` → `xxx.png`）。動画/ポスターのアスペクト比はポスターPNGの実寸から自動算出する
+（外部ツール不要）。動画は `slides/` の外に置けるよう、ビルドが環境変数 `DEMO_DIR` に絶対パスを渡す
+（`tools/build.sh` 参照）。上映用の自動再生＋ループはビルド末尾の `set-video-autoplay.sh` が付与する。
+
+| visual | 型 | 必須 |
+|---|---|---|
+| `video` | string | ✅（`DEMO_DIR` からの相対パス） |
+| `poster` | string | 任意（省略時は動画名から推定） |
+| `eyebrow` | string | 任意（章タグ・右上に小さく） |
+| `points` | string[] | 任意（動画下の要点） |
+| `tryit` | string | 任意（聴衆が手元で試す実プロンプト） |
+| `tryit_label` | string | 任意（既定「お手元でも試せます」） |
+| `tryit_qr` | string | 任意（QR画像パス） |
+| `cite` / `cites` | string / string[] | 任意 |
+
+### `section-recap` — 章のふりかえり（手法の使いどころ比較）
+章末で複数の手法を「特性・向く場面・限界」で横並び比較する。
+
+| visual.methods[] | 型 | 必須 |
+|---|---|---|
+| `name` | string | ✅ |
+| `fit` | string | ✅（向く場面） |
+| `limit` | string | ✅（限界） |
+| `level` / `trait` | string | 任意 |
+
+### `data-flow` — データの流れ（手元 ↔ クラウド）
+「貼ったデータがどこへ行くか」をレーンごとに図示。`tone` で各レーンの強調（注意/安全）を出す。
+
+| visual.lanes[] | 型 | 必須 |
+|---|---|---|
+| `name` `home` `cloud` `flow` `flow_label` `note` `tone` | string | ✅ |
+
+### `spectrum` — 連続的な段階（グラデーション帯）
+1次元の段階性（薄→濃）を停留点で示す。カード3枚より「連続している」ことを見せたい時に。
+
+| visual | 型 | 必須 |
+|---|---|---|
+| `stops[].heading` / `stops[].body` | string | ✅ |
+| `subtitle` / `axis` | string | 任意 |
+| `stops[].icon` / `stops[].cites` | string / string[] | 任意 |
+
+### `usage-bars` — 横棒グラフ
+カテゴリ別の数値（％など）を横棒で比較。カード多用の単調さを図示で緩和する。
+
+| visual | 型 | 必須 |
+|---|---|---|
+| `bars[].label` / `bars[].value` | string / number | ✅ |
+| `subtitle` / `banner` / `footnote` | string | 任意 |
+| `bars[].cite` | string | 任意 |
+
+### `compare-paths` — 2つの経路の対比
+同じ起点（`source`）から分かれる2つの道を左右に並べ、違いと結論を示す。
+
+| visual | 型 | 必須 |
+|---|---|---|
+| `source` | string | ✅ |
+| `left` / `right`（`{name, note}`） | object | ✅ |
+| `conclusion` | string | ✅ |
+| `eyebrow` / `middle` / `diffs_heading` / `diffs` / `cite` / `cites` | — | 任意 |
+
+### `nested-layers` — 入れ子の2層
+「外側＝何を／内側＝どう」のような包含関係の2層を同心で示す。
+
+| visual | 型 | 必須 |
+|---|---|---|
+| `outer` / `inner`（`{label, desc, tag?}`） | object | ✅ |
+| `eyebrow` / `note` / `cite` / `cites` | — | 任意 |
+
+### `agent-loop` — エージェントの反復ループ図
+「指示 → [考える→道具→確かめる] の繰り返し → 成果物」を1枚で。動画の前置き説明に。
+
+| visual | 型 | 必須 |
+|---|---|---|
+| `input`（`{label, example}`） | object | ✅ |
+| `output`（`{label, items[]}`） | object | ✅ |
+| `steps[]`（`{name, body, icon?}`） | object[] | ✅ |
+| `hub` / `hub_sub` / `loop_label` / `eyebrow` / `note` / `cite` / `cites` | — | 任意 |
+
+### `self-intro` — 自己紹介（図版サムネ横並び）
+ほぼ文字なしで、画像（論文サムネ等）を実寸比のまま横並び・中央寄せ。`assets/` の画像を使う。
+
+| visual | 型 | 必須 |
+|---|---|---|
+| `papers[].image` | string | ✅（`assets/` 相対） |
+| `papers[].caption` | string | 任意 |
+| `subtitle` / `footnote` | string | 任意 |
+
+---
+
 ## 一点物図版（新しい layout）の追加手順
 
 1. `lib/render.ts` のディスパッチャに `case "my-figure": return renderMyFigure(pres, s);` を足す。
