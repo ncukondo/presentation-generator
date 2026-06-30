@@ -331,6 +331,143 @@ const SCHEMAS: Record<string, LayoutSchema> = {
       note: { t: "string", optional: true },
     },
   },
+  "self-intro": {
+    top: { title: { t: "string" } },
+    visual: {
+      subtitle: { t: "string", optional: true },
+      footnote: { t: "string", optional: true },
+      papers: {
+        t: "object[]",
+        fields: {
+          image: { t: "string" },
+          caption: { t: "string", optional: true },
+        },
+      },
+    },
+  },
+  spectrum: {
+    top: { title: { t: "string" } },
+    visual: {
+      subtitle: { t: "string", optional: true },
+      axis: { t: "string", optional: true },
+      stops: {
+        t: "object[]",
+        fields: {
+          heading: { t: "string" },
+          icon: { t: "string", optional: true },
+          body: { t: "string" },
+          cites: CITE_ARR,
+        },
+      },
+    },
+  },
+  "usage-bars": {
+    top: { title: { t: "string" } },
+    visual: {
+      subtitle: { t: "string", optional: true },
+      banner: { t: "string", optional: true },
+      footnote: { t: "string", optional: true },
+      bars: {
+        t: "object[]",
+        fields: {
+          label: { t: "string" },
+          value: { t: "number" },
+          cite: { t: "string", optional: true },
+        },
+      },
+    },
+  },
+  "section-recap": {
+    top: { title: { t: "string" } },
+    visual: {
+      methods: {
+        t: "object[]",
+        fields: {
+          level: { t: "string", optional: true },
+          name: { t: "string" },
+          trait: { t: "string", optional: true },
+          fit: { t: "string" },
+          limit: { t: "string" },
+        },
+      },
+    },
+  },
+  "compare-paths": {
+    top: { title: { t: "string" } },
+    visual: {
+      eyebrow: { t: "string", optional: true },
+      source: { t: "string" },
+      left: { t: "object", fields: { name: { t: "string" }, icon: { t: "string", optional: true }, note: { t: "string" } } },
+      right: { t: "object", fields: { name: { t: "string" }, icon: { t: "string", optional: true }, note: { t: "string" } } },
+      middle: { t: "string", optional: true },
+      diffs_heading: { t: "string", optional: true },
+      diffs: { t: "string[]", optional: true },
+      conclusion: { t: "string" },
+      cite: { t: "string", optional: true },
+      cites: CITE_ARR,
+    },
+  },
+  "nested-layers": {
+    top: { title: { t: "string" } },
+    visual: {
+      eyebrow: { t: "string", optional: true },
+      outer: { t: "object", fields: { label: { t: "string" }, desc: { t: "string" }, tag: { t: "string", optional: true } } },
+      inner: { t: "object", fields: { label: { t: "string" }, desc: { t: "string" }, tag: { t: "string", optional: true } } },
+      note: { t: "string", optional: true },
+      cite: { t: "string", optional: true },
+      cites: CITE_ARR,
+    },
+  },
+  "agent-loop": {
+    top: { title: { t: "string" } },
+    visual: {
+      eyebrow: { t: "string", optional: true },
+      hub: { t: "string", optional: true },
+      hub_sub: { t: "string", optional: true },
+      loop_label: { t: "string", optional: true },
+      note: { t: "string", optional: true },
+      input: { t: "object", fields: { label: { t: "string" }, example: { t: "string" }, icon: { t: "string", optional: true } } },
+      output: { t: "object", fields: { label: { t: "string" }, items: { t: "string[]" }, icon: { t: "string", optional: true } } },
+      steps: { t: "object[]", fields: { icon: { t: "string", optional: true }, name: { t: "string" }, body: { t: "string" } } },
+      cite: { t: "string", optional: true },
+      cites: CITE_ARR,
+    },
+  },
+  "data-flow": {
+    top: { title: { t: "string" } },
+    visual: {
+      eyebrow: { t: "string", optional: true },
+      cite: { t: "string", optional: true },
+      cites: CITE_ARR,
+      lanes: {
+        t: "object[]",
+        fields: {
+          name: { t: "string" },
+          home: { t: "string" },
+          cloud: { t: "string" },
+          flow: { t: "string" },
+          flow_label: { t: "string" },
+          note: { t: "string" },
+          tone: { t: "string" },
+        },
+      },
+    },
+  },
+  demo: {
+    top: { title: { t: "string" } },
+    visual: {
+      video: { t: "string" },
+      poster: { t: "string", optional: true },
+      eyebrow: { t: "string", optional: true },
+      points: { t: "string[]", optional: true },
+      tryit: { t: "string", optional: true },
+      tryit_label: { t: "string", optional: true },
+      tryit_url: { t: "string", optional: true },
+      tryit_qr: { t: "string", optional: true },
+      cite: { t: "string", optional: true },
+      cites: CITE_ARR,
+    },
+  },
 };
 
 export interface ValidationResult {
