@@ -25,6 +25,10 @@ rsync -a --delete \
 
 cd "$BUILD_DIR"
 [ -d node_modules ] || bun install
+# デモ動画/ポスターは slides/ の外（プロジェクト直下 demos/output/）にあり /tmp に
+# コピーされないため、絶対パスを DEMO_DIR で渡して generate 時に読み込ませる。
+export DEMO_DIR="${DEMO_DIR:-$SRC_DIR/../demos/output}"
+echo "[build] demo: $DEMO_DIR"
 bun run generate
 
 cp "$BUILD_DIR/presentation.pptx" "$SRC_DIR/presentation.pptx"
@@ -35,4 +39,13 @@ if [ "${1:-}" = "--png" ]; then
   mkdir -p "$SRC_DIR/output_images"
   cp "$BUILD_DIR"/output_images/*.png "$SRC_DIR/output_images/" 2>/dev/null || true
   echo "[build] PNG -> $SRC_DIR/output_images/"
+fi
+
+# 上映用: 埋め込み動画に「自動再生(WithPrevious)＋ループ」を付与する。
+# PptxGenJS は常に click 再生で出力し、再生成のたびに timing を失うため、
+# ビルドの最後に付け直す（冪等）。AUTOPLAY=0 で抑止、PowerShell 不在ならスキップ。
+if [ "${AUTOPLAY:-1}" = "1" ] && command -v powershell.exe >/dev/null 2>&1; then
+  echo "[build] set-video-autoplay ..."
+  bash "$SRC_DIR/tools/set-video-autoplay.sh" "$SRC_DIR/presentation.pptx" \
+    || echo "[build] WARN: autoplay 付与に失敗（PowerPoint を閉じて再実行 / AUTOPLAY=0 で抑止）"
 fi
