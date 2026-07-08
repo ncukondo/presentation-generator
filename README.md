@@ -3,7 +3,7 @@
 PptxGenJS (TypeScript/Bun) + Gemini TTS + ffmpeg によるプレゼンテーション動画自動生成ツール。
 
 `slides.yaml` にスライド内容とナレーション原稿を定義し、PPTX → PNG → 音声 → MP4 を一括生成する。
-**題材ごとにクローンして使う汎用テンプレート**として設計されており、`slides.yaml`（内容）と
+**題材ごとに複製して使う汎用テンプレート**（GitHub Template repository）として設計されており、`slides.yaml`（内容）と
 `theme:`（配色）を差し替えるだけで、別テーマのプレゼンに流用できる。
 
 **データ駆動モード**：各スライドは `slides.yaml` で `layout`（レンダラ名）を宣言し、汎用レンダラ
@@ -24,12 +24,31 @@ PptxGenJS (TypeScript/Bun) + Gemini TTS + ffmpeg によるプレゼンテーシ�
 
 ## テンプレートとしての使い方
 
-題材ごとにこのリポジトリをクローンし、コンテンツと配色を差し替えて使う。
+このリポジトリは GitHub の **Template repository** として設定済み。題材ごとに履歴なしの
+新規リポジトリを作り、コンテンツと配色を差し替えて使う（`git clone` は元の履歴・リモートが
+ついてくるため非推奨）。
 
 ```bash
-git clone <this-repo> my-presentation
+# GitHub 上に新規リポジトリを作る（Web UI の「Use this template」でも可）
+gh repo create my-presentation --template ncukondo/presentation-generator --private --clone
 cd my-presentation
 bun install
+```
+
+リポジトリを作らずローカルにファイルだけ欲しい場合は degit が手軽:
+
+```bash
+bunx degit ncukondo/presentation-generator my-presentation
+cd my-presentation && git init && bun install
+```
+
+テンプレート側の改良（layout 追加・`lib/` の改修など）を後から取り込みたい場合は、
+派生リポジトリでテンプレートをリモート登録して必要なファイルだけ上書きする:
+
+```bash
+git remote add template git@github.com:ncukondo/presentation-generator
+git fetch template
+git checkout template/main -- lib docs tools   # slides.yaml は上書きしない
 ```
 
 1. `slides.yaml` の内容・ナレーション・各スライドの `layout` を差し替える（layout 語彙は `docs/layouts.md`）
