@@ -93,7 +93,9 @@ slides:
     layout: number-cards
     title: "背景：テーマを取り巻く現状"
     visual:
-      subtitle: 解決すべき3つの課題
+      # subtitle はタイトルに情報を足す時だけ置く（対象領域の限定・根拠の付加など）。
+      # タイトルの言い換えなら書かない（省略するとレンダラが残り要素を詰める）。
+      subtitle: 国内 12 施設への 2024 年度調査から
       # badge: none        # ← 番号が無意味な場合は省略できる
       items:
         - heading: 課題1のタイトル
@@ -121,19 +123,20 @@ slides:
     layout: number-cards
     title: 本手法の特長
     visual:
-      subtitle: 3つのポイント（番号ではなくアイコン）
+      # 「3つのポイント」のような題名の言い換え subtitle は置かない。
+      # body / detail は評価語（速い・堅牢・簡単）ではなく検証可能な事実（数値・条件）で書く。
       items:
-        - heading: 高速
-          body: 処理が速い
-          detail: 大規模データでも待たせない
+        - heading: 処理時間
+          body: 1 件あたり中央値 0.8 秒
+          detail: 10 万件のデータセットで計測
           icon: rocket
-        - heading: 安全
-          body: 検証済みで堅牢
-          detail: 多段のチェックで品質を担保
+        - heading: 検証体制
+          body: 3 段階の自動チェック
+          detail: 構文・整合性・出力形式を順に検査
           icon: shieldCheck
-        - heading: 簡単
-          body: 学習コストが低い
-          detail: 設定ファイル1つで完結
+        - heading: 導入手順
+          body: 設定ファイル 1 つで起動
+          detail: 追加インストール不要
           icon: lightbulb
     narration: |
       ここに特長紹介のナレーション原稿を記載します。
@@ -147,7 +150,7 @@ slides:
     layout: bullets
     title: 研究の目的
     visual:
-      subtitle: 本研究が明らかにすること
+      # subtitle: 「本研究が明らかにすること」のような題名の言い換えは置かない
       items:
         - text: 主要な研究課題（リサーチクエスチョン）を1文で提示
           bold: true
@@ -157,7 +160,7 @@ slides:
         - text: 本研究で新たに検証する仮説
           level: 1
         - 本発表で示す主要なアウトカム
-      note: ※ 箇条書きは level で字下げを表現できる
+      # note はスライド面に描かれる。説明用メモ（「level で字下げできる」等）は書かない
     narration: |
       ここに研究目的のナレーション原稿を記載します。
 
@@ -203,7 +206,7 @@ slides:
     layout: steps
     title: ワークフローの全体像
     visual:
-      subtitle: 実践する流れ
+      # subtitle: 「実践する流れ」は題名の言い換えなので置かない
       steps:
         - ステップ1のタイトル
         - ステップ2のタイトル
@@ -212,9 +215,9 @@ slides:
         - ステップ5のタイトル
         - ステップ6のタイトル
         - ステップ7のタイトル
-      note: ※ 各ステップの詳細は次のスライドで説明します
+      # note: 「詳細は次のスライドで」のような進行案内はスライドに書かず口頭（narration）で言う
     narration: |
-      ここにステップ概要のナレーション原稿を記載します。
+      ここにステップ概要のナレーション原稿を記載します。各ステップの詳細は次のスライドから順に説明します。
     # notes: |        # narration の代わりにノート専用メモを書く（TTS では読み上げない）
     #   登壇メモ・備考をここに記載。
 
@@ -332,7 +335,9 @@ slides:
         - heading: 対策2のタイトル
           body: 対策2の説明
           cites: []
-      banner: 重要なメッセージをここに記載
+      # banner は左右の本文の要約・言い換えでない新情報がある時だけ置く。
+      # 「〜すべき」「〜が重要」のような当為・意見はスライドに書かず口頭で言う。
+      # banner: 2025 年 4 月以降、院内ガイドライン第 3 版が適用
     narration: |
       ここにリスクと品質管理のナレーション原稿を記載します。
     # notes: |        # narration の代わりにノート専用メモを書く（TTS では読み上げない）
@@ -344,9 +349,9 @@ slides:
   # --------------------------------------------------------------------------
   - id: preparation
     layout: checklist
-    title: 事前準備のお願い
+    title: 事前準備
     visual:
-      subtitle: 事前にご準備ください
+      # subtitle: 「事前にご準備ください」は題名の言い換え＋依頼文なので置かない
       items:
         - title: 準備項目1
           desc: 準備項目1の説明
@@ -374,7 +379,8 @@ slides:
     visual:
       number: "03"
       eyebrow: SECTION
-      subtitle: 主要な所見をグラフ・表・図版で提示する
+      # subtitle は章の範囲を示す名詞句（文にしない）。無ければ省略
+      subtitle: 主要評価項目・副次評価項目・有害事象
     # notes: |        # ナレーション不要なら notes に登壇メモだけ書ける
     #   章の切り替えメモをここに記載。
 
@@ -385,11 +391,11 @@ slides:
   # --------------------------------------------------------------------------
   - id: figure-demo
     layout: figure
-    title: 主要な結果（図版）
+    title: 反応率の経時変化
     visual:
-      subtitle: 介入群と対照群の反応推移
+      # subtitle と caption が同じ内容になるなら subtitle は置かない
       image: sample-figure.png
-      caption: 図1. 経時的な反応率の変化（介入群 vs 対照群）
+      caption: 図1. 反応率の経時変化（介入群 vs 対照群、n=120）
       # cite: "your-citekey"     # 引用キーがあれば APA インテキストで併記
     narration: |
       ここに図版スライドのナレーション原稿を記載します。
@@ -404,7 +410,7 @@ slides:
     layout: chart
     title: 介入前後のスコア比較
     visual:
-      subtitle: 3 施設での平均値（縦棒グラフ）
+      subtitle: 3 施設の平均値（各 n=40）
       chartType: bar
       categories: ["A 施設", "B 施設", "C 施設"]
       series:
@@ -412,7 +418,7 @@ slides:
           values: [42, 55, 38]
         - name: 介入後
           values: [68, 72, 61]
-      note: グラフは PowerPoint 上でデータ編集可能なネイティブ figure として埋め込まれる
+      # note: グラフの実装説明はスライド面に書かない（グラフは PowerPoint 上でデータ編集可能）
     narration: |
       ここにグラフスライドのナレーション原稿を記載します。
 
@@ -425,14 +431,14 @@ slides:
     layout: table
     title: プラン比較表
     visual:
-      subtitle: 主要 3 プランの比較
+      # subtitle: 「主要 3 プランの比較」は題名の言い換えなので置かない
       headers: ["項目", "Free", "Pro", "Enterprise"]
       rows:
         - ["月額", "0 円", "1,500 円", "要問合せ"]
         - ["ユーザー数", "1", "10", "無制限"]
         - ["サポート", "なし", "メール", "専任担当"]
         - ["SLA", "—", "99.5%", "99.9%"]
-      note: 先頭列は行ラベルとして強調表示される
+      # note: 表の実装説明はスライド面に書かない（先頭列は行ラベルとして強調表示される）
     narration: |
       ここに表スライドのナレーション原稿を記載します。
 
@@ -445,7 +451,7 @@ slides:
     layout: big-stat
     title: 主要な数値
     visual:
-      subtitle: 本研究のキーメッセージ
+      # subtitle: 「本研究のキーメッセージ」は題名の言い換えなので置かない
       stats:
         - value: "68%"
           label: 介入群の改善率
@@ -468,13 +474,16 @@ slides:
     layout: split
     title: 考察
     visual:
-      subtitle: 結果の解釈
+      # subtitle: 「結果の解釈」は題名の言い換えなので置かない
+      # 考察でもスライド面は観察された事実（差・先行研究との一致/不一致・限界）にとどめ、
+      # そこからの推論（「〜と考えられる」「〜すべき」）は narration で述べる
       items:
-        - text: 介入群で一貫した改善が認められた
+        - text: 介入群で一貫した改善（全 3 施設）
           bold: true
-        - 効果は経時的に拡大し、4週以降で顕著
-        - text: 先行研究の知見と整合する
+        - 効果は経時的に拡大し、4 週以降で顕著
+        - text: 先行研究の報告と一致
           level: 1
+          # cites: ["your-citekey"]   # 先行研究との比較には引用を付ける
         - 限界：単一施設・短期間の観察
       image: sample-figure.png
       imageSide: right
@@ -502,7 +511,7 @@ slides:
           desc: パート3の内容説明
       closing_message: |-
         締めのメッセージをここに記載
-      closing_sub: 補足メッセージ
+      # closing_sub: closing_message の言い換えなら置かない（連絡先・資料 URL など新情報がある時だけ）
       conference: イベント名・日付をここに記入
     narration: |
       ここにクロージングのナレーション原稿を記載します。
