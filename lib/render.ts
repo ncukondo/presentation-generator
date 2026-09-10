@@ -474,11 +474,14 @@ function renderChecklist(pres: Pres, s: DeckSlide): Slide {
   const slide = addContentSlide(pres, s.title);
   addNotes(slide, s);
 
-  slide.addText(v.subtitle as string, {
-    x: MARGIN.left, y: 1.25, w: CONTENT_W, h: 0.5,
-    fontSize: FS.heading, fontFace: FONT, color: C.primary,
-    bold: true, align: "center", valign: "middle",
-  });
+  // subtitle は任意（題名の言い換えを誘発しないよう必須にしない）
+  if (typeof v.subtitle === "string" && v.subtitle.length > 0) {
+    slide.addText(v.subtitle, {
+      x: MARGIN.left, y: 1.25, w: CONTENT_W, h: 0.5,
+      fontSize: FS.heading, fontFace: FONT, color: C.primary,
+      bold: true, align: "center", valign: "middle",
+    });
+  }
 
   const cardW = 5.7;
   const cardH = 1.8;

@@ -128,7 +128,7 @@ slides:
       items:
         - heading: 処理時間
           body: 1 件あたり中央値 0.8 秒
-          detail: 10 万件のデータセットで計測
+          detail: 計測データ 10 万件
           icon: rocket
         - heading: 検証体制
           body: 3 段階の自動チェック
@@ -480,7 +480,7 @@ slides:
       items:
         - text: 介入群で一貫した改善（全 3 施設）
           bold: true
-        - 効果は経時的に拡大し、4 週以降で顕著
+        - 群間差は 4 週以降で拡大
         - text: 先行研究の報告と一致
           level: 1
           # cites: ["your-citekey"]   # 先行研究との比較には引用を付ける
