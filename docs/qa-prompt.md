@@ -39,6 +39,17 @@ reference concrete visual evidence, and do not be lenient.
     another element on the same slide (e.g. a subtitle that paraphrases the title, a
     banner that repeats the bullets, a card body that rewords its heading) and adds no
     new information. The fix is to remove the element entirely, not to shorten it.
+13. **Non-factual or speculative wording** — the audience follows medical-conference
+    conventions: slides state facts, interpretation is spoken. Flag any on-slide text
+    that is speculation, opinion or exhortation rather than a verifiable fact — Japanese
+    endings such as 「〜と思われる」「〜だろう」「〜かもしれない」「〜と考えられる」「〜すべき」
+    「〜が望ましい」「〜は重要だ」, or English "may", "should", "we believe", "it is likely".
+    The fix is to remove the sentence or restate it as the underlying fact; the
+    interpretation belongs in the narration.
+14. **Title is not a noun phrase** — a slide title or card heading written as a full
+    sentence, a question, or a slogan (e.g. 「〜である」「〜が必要だ」「〜のか？」) instead
+    of a concise noun phrase. Flag it; the fix is to rewrite the title as a noun phrase
+    and move any claim into the body as a fact.
 
 Design principles document has the full ruleset — defer to it for any ambiguous case.
 The top-level principle is that the slide must communicate its content to the audience;
@@ -57,7 +68,7 @@ Return ONLY valid JSON in the following shape, no preamble, no markdown fence:
   "issues": [
     {
       "severity": "blocker" | "major" | "minor",
-      "category": "overflow" | "overlap" | "wrap" | "contrast" | "font" | "empty" | "color" | "icon" | "placeholder" | "cite" | "over-trimmed" | "redundant" | "other",
+      "category": "overflow" | "overlap" | "wrap" | "contrast" | "font" | "empty" | "color" | "icon" | "placeholder" | "cite" | "over-trimmed" | "redundant" | "speculative" | "title-form" | "other",
       "description": "short concrete description",
       "where": "rough location: top-left, right column, card 2, etc."
     }
