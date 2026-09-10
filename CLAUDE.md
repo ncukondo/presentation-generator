@@ -9,6 +9,17 @@ PptxGenJS (TypeScript/Bun) によるプレゼンテーション動画自動生�
 （`lib/render.ts`）がそれを描画する。スライドの追加・編集・並べ替え・複製は **`slides.yaml` の
 編集だけで完結**する（旧来の「1スライド＝1 `pages/*.ts`」コード駆動モデルは廃止）。
 
+## 最上位原則: 聴衆に内容が伝わることを最優先する
+
+デザイン規則・既存 layout・折り返し警告はすべて「伝わる」ための手段であり、目的ではない。
+
+- **既存 layout に内容を合わせて削らない。** 伝えたい内容が既存 layout に収まらないなら、
+  `lib/render.ts` の layout を調整するか、新しい layout を新設する（手順3）。ためらわない。
+- **内容を削るのは、それにより簡潔になって伝わりやすくなる場合のみ。** 冗長・同義反復・
+  装飾的な要素を削るのは正しい。聴衆が理解するのに必要な情報を「収まらないから」削るのは誤り。
+- 削減とレイアウト変更で迷ったら、「削った結果、聴衆の理解が変わらないか」を問う。
+  変わるなら削らず、レイアウト側を直す。
+
 ## Project Structure
 
 ```
@@ -83,8 +94,10 @@ theme:
 
 役割（Primary/Accent/Step…）でテーマを差し替えても、`lib/render.ts` は `C.xxx` 参照なので無改修。
 
-### 3. 新しいレイアウト・一点物図版が必要なときだけコードを書く
+### 3. 既存 layout で伝わらないならレイアウトを調整・新設する
 
+既存 layout で内容が十分に伝わらない（収めるために必要な情報を削ることになる）場合は、
+ためらわずレイアウトを直す。既存 layout の列数・幅・行数を変えるか、新しい layout を足す。
 既存 layout で表現できない図版は、`lib/render.ts` に `case "my-figure": return renderMyFigure(...)`
 を1つ足し、`renderMyFigure(pres, s)` を実装する（パラメータは `s.visual` から読む）。
 あとは `slides.yaml` で `layout: my-figure` と書くだけ。**id 配線は不要**。
@@ -98,8 +111,9 @@ bun run build    # PPTX 生成 + PNG 変換
 
 ビルド時、テキストの折り返しは**禁則処理＋自然な区切りで自動バランス**される（`lib/text-metrics.ts`）。
 `\n` 挿入で直せないもの（幅不足・縦はみ出し・分割不能な長語）は `[wrap] RECOMMEND` と
-`wrap-report.json` に**具体的な改修推奨**が出るので、それに従い `slides.yaml`（短縮）か
-`lib/render.ts`（列数・幅）を直す。`WRAP_STRICT=1 bun run build` で推奨残存をビルド失敗扱いにできる。
+`wrap-report.json` に**具体的な改修推奨**が出るので、それに従い `lib/render.ts`（列数・幅・
+レイアウト変更）か `slides.yaml`（短縮）を直す。短縮は、簡潔になって伝わりやすくなる場合のみ。
+`WRAP_STRICT=1 bun run build` で推奨残存をビルド失敗扱いにできる。
 
 ### 5. 出力画像を確認し修正を繰り返す
 
@@ -108,6 +122,8 @@ bun run build    # PPTX 生成 + PNG 変換
 - **レイアウト** — 要素の重なりがないか、想定通りの配置になっているか
 - **文字** — 読みにくい折り返しやはみ出しがないか（`[wrap]` 出力も確認）
 - **コントラスト** — 背景と文字色の視認性は十分か
+- **冗長** — サブタイトル・バナー・キャプション・desc などが他の要素の言い換えになっていないか。
+  なっていれば要素ごと削除する（`docs/design-principles.md` 8章）
 
 デザイン原則の完全な基準は `docs/design-principles.md` を参照。
 `bun run qa` で API ベースの自動採点（`docs/qa-prompt.md` に基づく JSON レポート）も可能。
@@ -209,7 +225,8 @@ cp /tmp/presentation/output_images/*.png "$SRC/output_images/"
 ## Typography Rules
 
 - **最小フォントサイズ: 22pt**（`FS.body` 以上を使用すること）
-- テキストがボックスからはみ出す場合は内容を削減・簡潔にする
+- テキストがボックスからはみ出す場合、まず冗長な表現を簡潔にする。それでも収まらないなら
+  レイアウト（列数・幅・layout 種別）を直す。**伝達に必要な情報は削らない**
 - 折り返しは `lib/text-metrics.ts` が禁則・自然な区切りで自動バランス。手動 `\n` を入れる場合もそれが尊重される。
 
 ## Theme Constants

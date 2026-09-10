@@ -131,7 +131,7 @@ async function reviewOne(filename: string): Promise<SlideReport> {
     `}`,
     ``,
     `Scoring: start at 100, subtract 30 per blocker, 10 per major, 3 per minor, clamp to 0. pass = (no blockers AND score>=70).`,
-    `Be strict. Flag overflow, overlap, unnatural wrap, low contrast, empty regions, color misuse, decorative icons, placeholder text, and broken citations.`,
+    `Be strict. Flag overflow, overlap, unnatural wrap, low contrast, empty regions, color misuse, decorative icons, placeholder text, broken citations, over-trimmed content (text cut so short the slide no longer conveys a complete idea), and redundant elements (a subtitle, banner, note, caption or description that merely restates another element on the slide — recommend removing the element entirely). Fitting the layout never justifies dropping information the audience needs; recommend a layout change instead.`,
   ].join("\n");
 
   const { stdout, stderr, code } = await runClaude(prompt);

@@ -29,8 +29,21 @@ reference concrete visual evidence, and do not be lenient.
 8. **Decorative / mismatched icons** — icons that have no semantic relation to the text, placed as filler
 9. **Placeholder text** — any of: "ここに記載", "ここに記入", "をここに", "xxxx", "TODO", "lorem ipsum"
 10. **Broken citation** — rendering artifacts like "(@)" or a lone "@"
+11. **Over-trimmed content** — text so abbreviated that the slide no longer conveys a
+    complete idea to the audience: a heading with no supporting body where one is
+    clearly needed, fragments that cannot be understood without the narration, or items
+    cut to a single word that lost their meaning. Fitting the layout never justifies
+    dropping information the audience needs; the fix is to change the layout.
+12. **Redundant element** — an optional part (subtitle, banner, bottom note/caption,
+    footnote, eyebrow, item description, card body) that merely restates or summarizes
+    another element on the same slide (e.g. a subtitle that paraphrases the title, a
+    banner that repeats the bullets, a card body that rewords its heading) and adds no
+    new information. The fix is to remove the element entirely, not to shorten it.
 
 Design principles document has the full ruleset — defer to it for any ambiguous case.
+The top-level principle is that the slide must communicate its content to the audience;
+layout rules exist to serve that. Do not recommend "shorten the text" as a fix unless the
+result would be more concise and clearer. Otherwise recommend a layout change.
 
 ## Output format (strict JSON)
 
@@ -44,7 +57,7 @@ Return ONLY valid JSON in the following shape, no preamble, no markdown fence:
   "issues": [
     {
       "severity": "blocker" | "major" | "minor",
-      "category": "overflow" | "overlap" | "wrap" | "contrast" | "font" | "empty" | "color" | "icon" | "placeholder" | "cite" | "other",
+      "category": "overflow" | "overlap" | "wrap" | "contrast" | "font" | "empty" | "color" | "icon" | "placeholder" | "cite" | "over-trimmed" | "redundant" | "other",
       "description": "short concrete description",
       "where": "rough location: top-left, right column, card 2, etc."
     }
