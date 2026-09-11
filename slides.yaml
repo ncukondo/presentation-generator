@@ -15,9 +15,13 @@
 #   - narration: TTS・動画で読み上げる原稿（省略可。指定時は PowerPoint ノートにも入る）
 #   - notes:     PowerPoint ノート専用メモ（省略可。TTS では読み上げない。ナレーション不要の
 #                デッキで登壇メモを書く用途。ノート欄に入るのは notes ?? narration）
+#   - transition: このスライドに「入るとき」の切り替え効果（省略可。既定は defaults.transition）
+#                `morph` / `fade` / `push` / `wipe` / `none` の文字列か
+#                { type, option?(morph), direction?(push/wipe), duration?(秒) } のオブジェクト
 #   - visual:    layout 別のデータ（subtitle, cards, items, steps 等）
+#                要素の `key` は morph の対応付け名（前後のスライドで同じ key の要素が動く）
 #
-# layout ごとの visual スキーマは docs/layouts.md を参照。
+# layout ごとの visual スキーマ・transition・key の詳細は docs/layouts.md を参照。
 #
 # ナレーション修正例:
 #   yq '(.slides[] | select(.id == "background")).narration = "新しいナレーション"' -i slides.yaml
@@ -37,6 +41,17 @@ theme:
   # primary: "6A1B9A"     # この1色から pastel / step / accent を導出
   # --- フォント上書き（任意）---
   # fonts: { jp: Meiryo, en: Arial }
+
+# ============================================================================
+# defaults — 全スライド共通の既定値。各スライド側の指定が優先する。
+#   transition: スライド切り替え効果の既定（none / morph / fade / push / wipe）。
+#               morph は PowerPoint 2019 / Microsoft 365 のスライドショーでのみ再生され、
+#               他アプリと MP4（静止 PNG から生成）には反映されない。
+# ----------------------------------------------------------------------------
+defaults:
+  transition: none
+  # transition: fade                       # 全スライドをフェードで切り替える
+  # transition: { type: push, direction: left, duration: 0.4 }
 
 slides:
   # --------------------------------------------------------------------------
@@ -67,18 +82,41 @@ slides:
     layout: agenda
     title: 本日の内容
     visual:
+      # key は morph の対応付け名。直後の section スライドの visual.key と揃えると、
+      # その行の番号と題名が章扉の大きな番号・題名へ移動しながら拡大する。
       items:
-        - title: 背景と目的
+        - key: background
+          title: 背景と目的
           desc: テーマを取り巻く現状と本発表のねらい
-        - title: 方法
+        - key: methods
+          title: 方法
           desc: 対象・手順・評価指標
-        - title: 結果
+        - key: results
+          title: 結果
           desc: 主要な所見をグラフ・表で提示
-        - title: 考察
+        - key: discussion
+          title: 考察
           desc: 結果の解釈・限界・今後の展望
-        - title: まとめ
+        - key: summary
+          title: まとめ
     narration: |
       ここに目次のナレーション原稿を記載します。本日の発表の流れを示します。
+
+  # --------------------------------------------------------------------------
+  # 章扉（morph の見本）— 目次の 1 行目が、この章扉の番号・題名へ移動しながら拡大する
+  # 条件: 直前が agenda / transition: morph / visual.key が agenda の items[].key と同じ /
+  #       title と number が agenda 側の表示（題名・連番）と同じ文字列
+  # --------------------------------------------------------------------------
+  - id: section-background
+    layout: section
+    title: 背景と目的
+    transition: morph
+    visual:
+      key: background
+      number: "1"
+      eyebrow: SECTION
+    narration: |
+      ここに章扉のナレーション原稿を記載します。
 
   # --------------------------------------------------------------------------
   # 背景・課題スライド（番号カード型 — 旧 grid を統合した number-cards）

@@ -2,10 +2,14 @@
 # ============================================================================
 # set-video-autoplay.sh — PPTX 内の全動画を「スライド表示で自動再生」に設定する。
 #
+#   ※ 通常は不要（退避策）。`bun run generate` の後処理 (lib/postprocess.ts) が
+#      demo layout の動画に同等の <p:timing>（自動再生＋ループ）を書き込み、重複 cNvPr id も
+#      修復する。XML 版が特定環境で再生されない場合や、他ツールで作った PPTX に使う。
+#      tools/build.sh からは AUTOPLAY_COM=1 のときだけ呼ばれる。
+#
 #   方式: Windows PowerPoint(COM) に TimeLine.MainSequence.AddEffect(MediaPlay,
 #         WithPrevious) を全 media shape へ付与させ、保存。PowerPoint が
 #         正しい <p:timing> を書き、ついでに PptxGenJS の重複 cNvPr id も再採番する。
-#   理由: 手書き XML は壊れやすい／spid 重複問題がある。COM に書かせるのが確実。
 #
 #   使い方:  bash set-video-autoplay.sh <pptx_file>
 #   注意:    対象は Windows から見えるパス（/mnt/h など）に置くこと。/tmp は不可な場合あり。

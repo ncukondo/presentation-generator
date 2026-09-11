@@ -22,6 +22,7 @@
   "dependencies": {
     "@mdi/svg": "^7.4.47",
     "jose": "^6.0.11",
+    "jszip": "^3.10.1",
     "pptxgenjs": "^4.0.1",
     "yaml": "^2"
   }

@@ -9,11 +9,13 @@
  * throw at render time if a layout truly has no renderer.
  */
 
-import type { SlideData } from "./slides-data";
+import type { SlideData, DeckDefaults } from "./slides-data";
+import { parseTransition, MORPH_KEY_RE, RESERVED_MORPH_KEYS } from "./transitions";
 
 type FieldKind =
   | { t: "string"; optional?: boolean }
   | { t: "number"; optional?: boolean }
+  | { t: "boolean"; optional?: boolean }
   | { t: "string[]"; optional?: boolean }
   | { t: "object"; optional?: boolean; fields: Record<string, FieldKind> }
   | { t: "object[]"; optional?: boolean; fields: Record<string, FieldKind> }
@@ -47,6 +49,11 @@ function checkField(path: string, value: unknown, kind: FieldKind, errors: strin
     case "number":
       if (typeof value !== "number") {
         errors.push(`${path}: expected number, got ${describe(value)}`);
+      }
+      return;
+    case "boolean":
+      if (typeof value !== "boolean") {
+        errors.push(`${path}: expected boolean (true/false), got ${describe(value)}`);
       }
       return;
     case "string[]":
@@ -122,6 +129,9 @@ function truncate(s: string): string {
 
 // ── Schemas per layout ────────────────────────────────────
 const CITE_ARR: FieldKind = { t: "string[]", optional: true };
+// morph 対応付けキー（任意）。前後のスライドで同じ key を持つ要素が 1 つの図形として動く。
+// 値の書式は checkMorphKeys で検査する（ここでは型だけ）。
+const MORPH_KEY: FieldKind = { t: "string", optional: true };
 
 const SCHEMAS: Record<string, LayoutSchema> = {
   title: {
@@ -138,6 +148,7 @@ const SCHEMAS: Record<string, LayoutSchema> = {
       // number は文字列/数値どちらも許容するため宣言しない（render 側で String 化）
       eyebrow: { t: "string", optional: true },
       subtitle: { t: "string", optional: true },
+      key: MORPH_KEY, // 章番号=.num / 題名=!!key。agenda の items[].key と揃えると目次の行が章扉へ飛ぶ
     },
   },
   evidence: {
@@ -164,7 +175,7 @@ const SCHEMAS: Record<string, LayoutSchema> = {
     top: { title: { t: "string" } },
     visual: {
       subtitle: { t: "string", optional: true },
-      steps: { t: "(string|object)[]", fields: { title: { t: "string" }, icon: { t: "string", optional: true } } },
+      steps: { t: "(string|object)[]", fields: { title: { t: "string" }, icon: { t: "string", optional: true }, key: MORPH_KEY } },
       note: { t: "string", optional: true },
     },
   },
@@ -260,6 +271,7 @@ const SCHEMAS: Record<string, LayoutSchema> = {
           footer: { t: "string", optional: true },
           cites: CITE_ARR,
           icon: { t: "string", optional: true }, // 指定時は番号をアイコンに差し替え
+          key: MORPH_KEY,
         },
       },
       cards: {
@@ -272,6 +284,7 @@ const SCHEMAS: Record<string, LayoutSchema> = {
           footer: { t: "string", optional: true },
           cites: CITE_ARR,
           icon: { t: "string", optional: true },
+          key: MORPH_KEY,
         },
       },
     },
@@ -282,12 +295,14 @@ const SCHEMAS: Record<string, LayoutSchema> = {
       subtitle: { t: "string", optional: true },
       // items は string か {text, level?, cites?, bold?}。混在のため render 側で正規化。
       note: { t: "string", optional: true },
+      key: MORPH_KEY, // 箇条書き本文（1 テキストボックス）の morph キー
     },
   },
   agenda: {
     top: { title: { t: "string" } },
     visual: {
-      // items は string か {title, desc?}。混在のため render 側で正規化。
+      // items は string か {title, desc?, key?}。混在のため render 側で正規化。
+      // key は morph 用（丸=.badge / 番号=.num / 題名=!!key）。checkMorphKeys が書式・重複を検査する。
     },
   },
   figure: {
@@ -308,6 +323,8 @@ const SCHEMAS: Record<string, LayoutSchema> = {
       subtitle: { t: "string", optional: true },
       caption: { t: "string", optional: true },
       note: { t: "string", optional: true },
+      key: MORPH_KEY,       // テキスト列（箇条書き本文）の morph キー
+      image_key: MORPH_KEY, // 画像（＋caption）の morph キー
     },
   },
   "big-stat": {
@@ -468,6 +485,7 @@ const SCHEMAS: Record<string, LayoutSchema> = {
           flow_label: { t: "string" },
           note: { t: "string" },
           tone: { t: "string" },
+          key: MORPH_KEY,
         },
       },
     },
@@ -477,6 +495,8 @@ const SCHEMAS: Record<string, LayoutSchema> = {
     visual: {
       video: { t: "string" },
       poster: { t: "string", optional: true },
+      autoplay: { t: "boolean", optional: true }, // 既定 true: スライド表示で自動再生
+      loop: { t: "boolean", optional: true },     // 既定 true: スライドを離れるまでループ
       eyebrow: { t: "string", optional: true },
       points: { t: "string[]", optional: true },
       tryit: { t: "string", optional: true },
@@ -489,15 +509,57 @@ const SCHEMAS: Record<string, LayoutSchema> = {
   },
 };
 
+// ── morph keys ────────────────────────────────────────────
+// `visual` 配下の `key` / `*_key` を再帰的に集め、書式と同一スライド内の重複を検査する。
+// PowerPoint は同名（`!!key`）の図形を 1 組しか対応付けないため、重複はエラー。
+const MORPH_KEY_FIELD_RE = /^(key|[a-z0-9]+_key)$/;
+
+function checkMorphKeys(slideId: string, visual: unknown, errors: string[]): void {
+  const seen = new Map<string, string>(); // key → first path
+  const walk = (node: unknown, path: string) => {
+    if (Array.isArray(node)) {
+      node.forEach((v, i) => walk(v, `${path}[${i}]`));
+      return;
+    }
+    if (typeof node !== "object" || node === null) return;
+    for (const [k, v] of Object.entries(node as Record<string, unknown>)) {
+      const p = `${path}.${k}`;
+      if (MORPH_KEY_FIELD_RE.test(k)) {
+        if (typeof v !== "string") continue; // 型エラーはスキーマ検査側で出る
+        if (!MORPH_KEY_RE.test(v)) {
+          errors.push(`${p}: invalid morph key "${v}" (use letters, digits, "_" or "-")`);
+        } else if ((RESERVED_MORPH_KEYS as readonly string[]).includes(v)) {
+          errors.push(`${p}: morph key "${v}" is reserved for the slide chrome (${RESERVED_MORPH_KEYS.join(", ")})`);
+        } else if (seen.has(v)) {
+          errors.push(`${p}: duplicate morph key "${v}" (already used at ${seen.get(v)})`);
+        } else {
+          seen.set(v, p);
+        }
+      } else {
+        walk(v, p);
+      }
+    }
+  };
+  walk(visual, `${slideId}.visual`);
+}
+
 export interface ValidationResult {
   errors: string[];
   warnings: string[];
 }
 
-export function validateSlides(slides: SlideData[]): ValidationResult {
+export function validateSlides(slides: SlideData[], defaults?: DeckDefaults): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
   const seen = new Set<string>();
+
+  if (defaults !== undefined && (typeof defaults !== "object" || defaults === null || Array.isArray(defaults))) {
+    errors.push(`defaults: expected object, got ${describe(defaults)}`);
+  } else if (defaults) {
+    const t = parseTransition("defaults.transition", defaults.transition);
+    errors.push(...t.errors);
+    warnings.push(...t.warnings);
+  }
 
   for (const slide of slides) {
     if (!slide.id) {
@@ -506,6 +568,12 @@ export function validateSlides(slides: SlideData[]): ValidationResult {
     }
     if (seen.has(slide.id)) errors.push(`duplicate slide id: ${slide.id}`);
     seen.add(slide.id);
+
+    // transition は layout に依らない共通項目（未知 layout でも検査する）
+    const t = parseTransition(`${slide.id}.transition`, slide.transition);
+    errors.push(...t.errors);
+    warnings.push(...t.warnings);
+    checkMorphKeys(slide.id, slide.visual, errors);
 
     const layout = (slide as Record<string, unknown>).layout;
     if (typeof layout !== "string" || !layout) {
@@ -531,8 +599,8 @@ export function validateSlides(slides: SlideData[]): ValidationResult {
  * Validate slides and print a human-readable report.
  * Throws if any errors are present.
  */
-export function validateSlidesOrThrow(slides: SlideData[]): void {
-  const { errors, warnings } = validateSlides(slides);
+export function validateSlidesOrThrow(slides: SlideData[], defaults?: DeckDefaults): void {
+  const { errors, warnings } = validateSlides(slides, defaults);
   if (warnings.length) {
     console.warn(`[validate] ${warnings.length} warning(s):`);
     for (const w of warnings) console.warn(`  ⚠ ${w}`);

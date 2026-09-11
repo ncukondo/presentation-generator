@@ -13,6 +13,7 @@
 | `title` | layout 依存 | スライドタイトル（多くの layout で使用）。 |
 | `narration` | 任意 | TTS・動画の**読み上げ原稿**。指定時は PowerPoint ノート欄にも入る。 |
 | `notes` | 任意 | PowerPoint **ノート専用メモ**。TTS/動画では読み上げない。`narration` より優先。 |
+| `transition` | 任意 | このスライドに**入るとき**の切り替え効果。省略時は `defaults.transition`。[後述](#transition--スライド切り替え効果morph-対応) |
 | `visual` | layout 依存 | レイアウト別パラメータ（下表）。 |
 
 > **ノート欄に入る文字列 = `notes ?? narration`**。
@@ -40,7 +41,7 @@
 3-7 項目向け。番号バッジ＋章タイトル（＋任意の補足）を縦に並べる。
 | visual | 型 | 必須 |
 |---|---|---|
-| `items[]` | `string`（タイトルのみ）or `{title, desc?}` | ✅ |
+| `items[]` | `string`（タイトルのみ）or `{title, desc?, key?}` | ✅（`key` は morph 用。直後の `section` の `visual.key` と揃える） |
 
 ### `bullets` — タイトル＋階層箇条書き本文
 学術発表で最頻出の素の箇条書き。序論・考察・まとめ等に。`level: 1` で字下げのサブ項目。
@@ -57,6 +58,7 @@
 | `number` | string / number | 任意（大きな章番号。例 `"03"`） |
 | `eyebrow` | string | 任意（小見出し。例 `SECTION`） |
 | `subtitle` | string | 任意（章の補足） |
+| `key` | string | 任意（morph 用。直前の `agenda` の `items[].key` と揃えると、目次の行が章番号・題名へ飛ぶ） |
 
 ### `evidence` — 2カラム（左:特徴リスト / 右:エビデンスカード）
 | visual | 型 | 必須 |
@@ -222,12 +224,16 @@ visual:
 短縮版 mp4 を主役に1枚。ポスター画像（再生前の見た目）は `poster` 省略時に動画名から推定
 （`xxx-short.mp4` → `xxx.png`）。動画/ポスターのアスペクト比はポスターPNGの実寸から自動算出する
 （外部ツール不要）。動画は `slides/` の外に置けるよう、ビルドが環境変数 `DEMO_DIR` に絶対パスを渡す
-（`tools/build.sh` 参照）。上映用の自動再生＋ループはビルド末尾の `set-video-autoplay.sh` が付与する。
+（`tools/build.sh` 参照）。上映用の**自動再生＋ループは既定で有効**。PptxGenJS はクリック再生でしか
+出力しないので、`lib/postprocess.ts` が保存直前に PowerPoint と同じ形の `<p:timing>` を書き込む
+（transition と同じ後処理。PowerPoint 不要・冪等）。
 
 | visual | 型 | 必須 |
 |---|---|---|
 | `video` | string | ✅（`DEMO_DIR` からの相対パス） |
 | `poster` | string | 任意（省略時は動画名から推定） |
+| `autoplay` | boolean | 任意（既定 `true`。スライド表示で自動再生。`false` でクリック再生） |
+| `loop` | boolean | 任意（既定 `true`。スライドを離れるまで繰り返す） |
 | `eyebrow` | string | 任意（章タグ・右上に小さく） |
 | `points` | string[] | 任意（動画下の要点） |
 | `tryit` | string | 任意（聴衆が手元で試す実プロンプト） |
@@ -306,6 +312,83 @@ visual:
 | `papers[].image` | string | ✅（`assets/` 相対） |
 | `papers[].caption` | string | 任意 |
 | `subtitle` / `footnote` | string | 任意 |
+
+---
+
+## transition — スライド切り替え効果（morph 対応）
+
+PptxGenJS には切り替え効果の API が無いので、`generate.ts` が保存直前に PPTX 内の slide XML へ
+`<p:transition>` を注入する（`lib/transitions.ts`）。宣言は `slides.yaml` だけで完結する。
+
+```yaml
+defaults:
+  transition: fade            # 全スライドの既定（省略時 none）
+
+slides:
+  - id: agenda
+    transition: none          # 既定を打ち消す
+  - id: background
+    transition: morph         # 短縮形（type だけ）
+  - id: features
+    transition:               # 詳細形
+      type: morph             # none / morph / fade / push / wipe
+      option: byObject        # morph 専用: byObject / byWord / byChar
+      duration: 0.8           # 秒（省略時 morph 1.0、それ以外 0.5）
+  - id: results
+    transition: { type: push, direction: left }   # push / wipe 専用: left / right / up / down
+```
+
+- 効果は**そのスライドに入るとき**に再生される（PowerPoint と同じ意味）。
+- `option` / `direction` を該当しない type に書くと警告（無視される）。未知の type はエラー。
+- **morph は PowerPoint 2019 / Microsoft 365 のスライドショーでのみ再生**される。他アプリでは
+  フォールバックのフェードになる。`bun run video` の MP4 は静止 PNG から作るので反映されない。
+- `tools/set-video-autoplay.sh` などで PowerPoint が再保存しても効果は保持される。
+
+### morph の対応付け `key`
+
+morph は前後のスライドで「同じ図形」を見つけ、位置・大きさ・色の差を動きにする。PowerPoint は
+名前が `!!` で始まる図形を**名前一致で必ず対応付ける**ので、`visual` の要素に `key` を書くと、
+レンダラが `!!key` という図形名で描く。前後のスライドで同じ `key` を持つ要素は、layout が
+違っても 1 つの図形として扱われる。
+
+**動きが見えるのは「見た目が同じ要素が、場所や大きさを変えて残る」ときだけ。** 文字なら同じ
+文字列、図形なら同じ塗り、画像なら同じ画像を両方のスライドに置く。片方にしか無い要素は
+フェードで消える／現れるだけなので、白いカード枠を塗りの無いテキストボックスへ対応付けても
+ほぼフェードにしか見えない。
+
+見本は「目次の行 → 章扉」。目次の連番と題名が、章扉の大きな番号と題名へ移動しながら拡大する
+（サンプルデッキの `agenda` → `section-background`）。
+
+```yaml
+  - id: agenda
+    layout: agenda
+    visual:
+      items:
+        - key: background     # ← 丸=!!background.badge / 番号=.num / 題名=!!background
+          title: 背景と目的
+        - key: methods
+          title: 方法
+  - id: section-background
+    layout: section
+    title: 背景と目的         # agenda 側と同じ文字列にする（違うと文字はフェード）
+    transition: morph
+    visual:
+      key: background         # ← 番号=!!background.num / 題名=!!background
+      number: "1"             # agenda の連番と同じ文字列にする
+```
+
+- 共通クローム（背景 `!!bg` / タイトルバー `!!titlebar` / 題名 `!!title` / 下線 `!!rule`）は
+  `addContentSlide` が自動で名前を付ける。`section` の全面背景も `!!bg` なので、本文 → 章扉の
+  morph では背景色が滑らかに変わる。本文スライド同士では背景が静止し題名だけ差し替わる。
+- 複数図形からなる要素はレンダラが接尾辞で配る（例 number-cards: 枠 `!!k`、縦帯 `.bar`、丸 `.badge`、
+  番号 `.num` / アイコン `.icon`、見出し `.heading`、本文 `.body`）。接尾辞は各レンダラの冒頭コメントを参照。
+- `key` の書式は英数字と `_` `-`（`.` は接尾辞用に予約）。`bg` / `titlebar` / `title` / `rule` は
+  クロームに予約済み。同一スライド内の重複はエラー。
+- `key` を持つ layout: `agenda`（items）、`section`（`visual.key`）、`number-cards`（items/cards）、
+  `steps`（steps）、`data-flow`（lanes）、`bullets`（`visual.key` = 本文）、
+  `split`（`visual.key` = テキスト列、`visual.image_key` = 画像＋caption）。
+  他の layout に足すときは、要素に `key` を追加し `morphOpt(key, part)` を各 `add*` に spread する
+  （`lib/validate.ts` の SCHEMAS にも `key: MORPH_KEY` を足す）。
 
 ---
 

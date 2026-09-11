@@ -5,6 +5,7 @@ import {
   MARGIN, CONTENT_W, LINE_THIN,
 } from "./theme";
 import { darken } from "./color";
+import { morphName } from "./transitions";
 
 // ═══════════════════════════════════════════════════════════
 // Slide creation helpers
@@ -14,7 +15,13 @@ import { darken } from "./color";
 // アクセントを使う）。ここでは中立色のクロームのみを提供する。
 // ═══════════════════════════════════════════════════════════
 
-/** Create a content slide with a calm off-white background and a slate title bar. */
+/**
+ * Create a content slide with a calm off-white background and a slate title bar.
+ *
+ * The chrome shapes carry fixed morph names (`!!bg` / `!!titlebar` / `!!title` /
+ * `!!rule`) so that a `transition: morph` between two content slides keeps the
+ * background and bar still and cross-fades only the title text.
+ */
 export function addContentSlide(pres: Pres, title: string): Slide {
   const slide = pres.addSlide();
 
@@ -22,23 +29,27 @@ export function addContentSlide(pres: Pres, title: string): Slide {
   slide.addShape(pres.ShapeType.rect, {
     x: 0, y: 0, w: SLIDE_W, h: SLIDE_H,
     fill: { color: C.offWhite },
+    objectName: morphName("bg"),
   });
 
   // Title bar (primary only — no accent decoration)
   slide.addShape(pres.ShapeType.rect, {
     x: 0, y: 0, w: SLIDE_W, h: 1.05,
     fill: { color: C.primary },
+    objectName: morphName("titlebar"),
   });
   slide.addText(title, {
     x: MARGIN.left, y: 0.15, w: CONTENT_W, h: 0.75,
     fontSize: FS.slideTitle, fontFace: FONT, color: C.white,
     bold: true, align: "left", valign: "middle",
+    objectName: morphName("title"),
   });
 
   // Neutral hairline under the header (no accent)
   slide.addShape(pres.ShapeType.line, {
     x: 0, y: 1.07, w: SLIDE_W, h: 0,
     line: { color: C.midGray, width: 1 },
+    objectName: morphName("rule"),
   });
 
   return slide;
@@ -122,7 +133,11 @@ export function addBox(
   });
 }
 
-/** Card with colored top band. */
+/**
+ * Card with colored top band.
+ * `opts.objectName` (e.g. from `morphOpt(key)`) names the body box; the band
+ * and its title get `.band` / `.heading` suffixes.
+ */
 export function addCard(
   slide: Slide,
   x: number, y: number, w: number, h: number,
@@ -132,15 +147,18 @@ export function addCard(
   opts: Partial<PptxGenJS.TextPropsOptions> = {},
 ) {
   const bandH = 0.42;
+  const name = opts.objectName;
   slide.addShape("rect" as any, {
     x, y, w, h: bandH,
     fill: { color: bandColor },
     rectRadius: 0.05,
+    ...(name ? { objectName: `${name}.band` } : {}),
   });
   slide.addText(title, {
     x, y, w, h: bandH,
     fontSize: FS.small, fontFace: FONT, color: C.white,
     bold: true, align: "center", valign: "middle",
+    ...(name ? { objectName: `${name}.heading` } : {}),
   });
   addBox(slide, x, y + bandH, w, h - bandH, body, {
     align: "left", valign: "top",

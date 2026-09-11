@@ -41,10 +41,10 @@ if [ "${1:-}" = "--png" ]; then
   echo "[build] PNG -> $SRC_DIR/output_images/"
 fi
 
-# 上映用: 埋め込み動画に「自動再生(WithPrevious)＋ループ」を付与する。
-# PptxGenJS は常に click 再生で出力し、再生成のたびに timing を失うため、
-# ビルドの最後に付け直す（冪等）。AUTOPLAY=0 で抑止、PowerShell 不在ならスキップ。
-if [ "${AUTOPLAY:-1}" = "1" ] && command -v powershell.exe >/dev/null 2>&1; then
+# 上映用の「自動再生(WithPrevious)＋ループ」は generate 時に lib/postprocess.ts が
+# <p:timing> として書き込む（demo layout の visual.autoplay / loop、既定 true）。
+# 以前の PowerPoint(COM) 経由の付与は退避策として残す: AUTOPLAY_COM=1 で実行。
+if [ "${AUTOPLAY_COM:-0}" = "1" ] && command -v powershell.exe >/dev/null 2>&1; then
   echo "[build] set-video-autoplay ..."
   bash "$SRC_DIR/tools/set-video-autoplay.sh" "$SRC_DIR/presentation.pptx" \
     || echo "[build] WARN: autoplay 付与に失敗（PowerPoint を閉じて再実行 / AUTOPLAY=0 で抑止）"

@@ -39,10 +39,13 @@ export function addIcon(
   y: number,
   size: number,
   color: string = C.text,
+  /** PptxGenJS shape name (e.g. `morphName(key, "icon")` for morph pairing). */
+  objectName?: string,
 ) {
   slide.addImage({
     data: iconData(name, color),
     x, y, w: size, h: size,
+    ...(objectName ? { objectName } : {}),
   });
 }
 

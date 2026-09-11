@@ -15,7 +15,10 @@ import { SLIDE_W, SLIDE_H } from "./lib/theme";
 import { instrumentPres, getCollected } from "./lib/instrument";
 import { reportWrapLint } from "./lib/lint-wrap";
 import { getDeck } from "./lib/deck";
+import { getDefaults } from "./lib/slides-data";
 import { renderSlide } from "./lib/render";
+import { resolveTransition } from "./lib/transitions";
+import { postProcessPptx, takeMediaPlayback, type SlidePostSpec } from "./lib/postprocess";
 
 // ── Create presentation ─────────────────────────────────
 const pres = new PptxGenJS();
@@ -30,7 +33,24 @@ pres.subject = "プレゼンテーション動画";     // ← 用途に合わ�
 
 // ── Build all slides ────────────────────────────────────
 // slides.yaml の並び順 = スライドの順序。各スライドの `layout` で描画を切り替える。
-for (const s of getDeck()) renderSlide(pres, s);
+// 切り替え効果（transition）と動画の自動再生（timing）は PptxGenJS に API が無いので、
+// 描画されたスライドの通し番号（= ppt/slides/slideN.xml）ごとに控えておき、保存直前に
+// lib/postprocess.ts が XML へ注入する。renderSlide が undefined を返す（references で
+// 引用ゼロ等）スライドは番号を消費しない。
+const defaults = getDefaults();
+const post = new Map<number, SlidePostSpec>();
+let slideNo = 0;
+for (const s of getDeck()) {
+  const slide = renderSlide(pres, s);
+  if (!slide) continue;
+  slideNo++;
+  const spec: SlidePostSpec = {};
+  const t = resolveTransition(s.transition, defaults.transition);
+  if (t) spec.transition = t;
+  const media = takeMediaPlayback(slide);
+  if (media.length) spec.media = media;
+  if (spec.transition || spec.media) post.set(slideNo, spec);
+}
 
 // ── Wrap lint ───────────────────────────────────────────
 // Surfaces anything auto-balancing couldn't fix (too-narrow / overflow /
@@ -39,6 +59,20 @@ reportWrapLint(getCollected());
 
 // ── Save ────────────────────────────────────────────────
 const fileName = "presentation.pptx";
-await pres.writeFile({ fileName });
 // `slides` is an internal array not in PptxGenJS's public types — cast to read its length.
-console.log(`Done: ${fileName} (${(pres as any).slides.length} slides)`);
+const total = (pres as any).slides.length as number;
+if (total !== slideNo) {
+  throw new Error(`slide count mismatch: rendered ${slideNo}, PptxGenJS has ${total} (transition numbering would be off)`);
+}
+const rendered = (await pres.write({ outputType: "nodebuffer" })) as Uint8Array;
+const { data, summary } = await postProcessPptx(rendered, post);
+if (summary.transitions) {
+  const kinds = [...post.values()].map((p) => p.transition?.type).filter(Boolean);
+  console.log(`[transition] applied to ${summary.transitions} slide(s): ${[...new Set(kinds)].join(", ")}`);
+}
+if (summary.mediaSlides) console.log(`[media] autoplay/loop timing on ${summary.mediaSlides} slide(s)`);
+if (summary.renumberedSlides.length) {
+  console.log(`[postprocess] repaired duplicate shape ids on slide(s): ${summary.renumberedSlides.join(", ")}`);
+}
+await Bun.write(fileName, data);
+console.log(`Done: ${fileName} (${total} slides)`);

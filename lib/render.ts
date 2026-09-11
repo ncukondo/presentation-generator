@@ -22,6 +22,8 @@ import { addIcon, ICONS } from "./icons";
 import { cite, getUsedCitations } from "./cite";
 import { darken, mixWhite } from "./color";
 import { estimateWrap } from "./text-metrics";
+import { morphName, morphOpt } from "./transitions";
+import { requestMediaPlayback } from "./postprocess";
 import type { DeckSlide } from "./deck";
 
 // ── Helpers ──────────────────────────────────────────────
@@ -173,7 +175,7 @@ function renderEvidence(pres: Pres, s: DeckSlide): Slide {
 // ── steps (← slide04 steps-overview) ─────────────────────
 // steps[] は string（タイトルのみ）か {title, icon?}。icon は MDI 名 or lib/icons.ts のキー。
 // 既定アイコンは持たない — 内容に合わないアイコンは装飾ノイズなので、指定が無ければ番号だけ描く。
-type StepItem = { title: string; icon?: string };
+type StepItem = { title: string; icon?: string; key?: string };
 function normalizeSteps(raw: unknown): StepItem[] {
   return ((raw as Array<string | StepItem>) ?? []).map((st) =>
     typeof st === "string" ? { title: st } : st,
@@ -220,16 +222,20 @@ function renderStepsOverview(pres: Pres, s: DeckSlide): Slide {
       if (!st) return;
       const label = st.title;
       const x = startX + c * (stepW + gap);
+      // morph 対応付け: key があれば 枠=!!key / 帯=.bar / 丸=.badge / 番号=.num / アイコン=.icon / 題=.title
+      const key = st.key;
 
       slide.addShape(pres.ShapeType.rect, {
         x, y: rowY, w: stepW, h: stepH,
         fill: { color: C.white },
         line: { color: C.primary, width: 1 },
         rectRadius: 0.08,
+        ...morphOpt(key),
       });
       slide.addShape(pres.ShapeType.rect, {
         x, y: rowY, w: stepW, h: 0.1,
         fill: { color: C.primary },
+        ...morphOpt(key, "bar"),
       });
 
       const headerY = rowY + 0.25;
@@ -240,16 +246,18 @@ function renderStepsOverview(pres: Pres, s: DeckSlide): Slide {
       slide.addShape(pres.ShapeType.ellipse, {
         x: groupX, y: headerY, w: numSize, h: numSize,
         fill: { color: C.primary },
+        ...morphOpt(key, "badge"),
       });
       slide.addText(`${i + 1}`, {
         x: groupX, y: headerY, w: numSize, h: numSize,
         fontSize: FS.heading, fontFace: FONT, color: C.white,
         bold: true, align: "center", valign: "middle",
+        ...morphOpt(key, "num"),
       });
       if (st.icon) {
         addIcon(slide, resolveIcon(st.icon),
           groupX + numSize + 0.15, headerY + (numSize - iconSize) / 2,
-          iconSize, C.primary);
+          iconSize, C.primary, key ? morphName(key, "icon") : undefined);
       }
 
       slide.addText(label, {
@@ -258,6 +266,7 @@ function renderStepsOverview(pres: Pres, s: DeckSlide): Slide {
         align: "center", valign: "middle", wrap: true,
         lineSpacing: 28,
         margin: [0, 0, 0, 0],
+        ...morphOpt(key, "title"),
       });
     }
   });
@@ -786,6 +795,7 @@ function renderNumberCards(pres: Pres, s: DeckSlide): Slide {
   const v = vis(s);
   const items = (v.items ?? v.cards) as Array<{
     heading: string; body: string; detail?: string; footer?: string; cites?: string[]; icon?: string;
+    key?: string;
   }>;
   const slide = addContentSlide(pres, s.title);
   addNotes(slide, s);
@@ -832,16 +842,21 @@ function renderNumberCards(pres: Pres, s: DeckSlide): Slide {
 
   items.forEach((item, i) => {
     const x = MARGIN.left + i * (colW + gap);
+    // morph 対応付け: key があれば 枠=!!key / 縦帯=.bar / 丸=.badge / 番号=.num / アイコン=.icon
+    //                 見出し=.heading / 本文=.body
+    const key = item.key;
 
     slide.addShape(pres.ShapeType.rect, {
       x, y, w: colW, h,
       fill: { color: C.white },
       line: { color: C.lightGray, width: 0.5 },
       rectRadius: 0.08,
+      ...morphOpt(key),
     });
     slide.addShape(pres.ShapeType.rect, {
       x, y, w: 0.12, h,
       fill: { color },
+      ...morphOpt(key, "bar"),
     });
 
     const mode = cardBadge[i];
@@ -852,15 +867,18 @@ function renderNumberCards(pres: Pres, s: DeckSlide): Slide {
         x: bx, y: by, w: numberSize, h: numberSize,
         fill: { color },
         line: { color: C.white, width: 3 },
+        ...morphOpt(key, "badge"),
       });
       if (mode === "icon") {
         const isz = numberSize * 0.55;
-        addIcon(slide, resolveIcon(item.icon!), bx + (numberSize - isz) / 2, by + (numberSize - isz) / 2, isz, C.white);
+        addIcon(slide, resolveIcon(item.icon!), bx + (numberSize - isz) / 2, by + (numberSize - isz) / 2, isz, C.white,
+          key ? morphName(key, "icon") : undefined);
       } else {
         slide.addText(`0${i + 1}`, {
           x: bx, y: by, w: numberSize, h: numberSize,
           fontSize: FS.heading, fontFace: FONT, color: C.white,
           bold: true, align: "center", valign: "middle",
+          ...morphOpt(key, "num"),
         });
       }
     }
@@ -869,6 +887,7 @@ function renderNumberCards(pres: Pres, s: DeckSlide): Slide {
       x: x + 0.3, y: headingY, w: colW - 0.4, h: 0.55,
       fontSize: FS.heading, fontFace: FONT, color,
       bold: true, align: "center", valign: "middle", wrap: true,
+      ...morphOpt(key, "heading"),
     });
 
     const parts: TextProps[] = [
@@ -892,6 +911,7 @@ function renderNumberCards(pres: Pres, s: DeckSlide): Slide {
         fill: { color: C.white },
         line: { width: 0 } as any,
         margin: [4, 4, 4, 4],
+        ...morphOpt(key, "body"),
       },
     );
   });
@@ -1124,6 +1144,8 @@ function renderBullets(pres: Pres, s: DeckSlide): Slide {
   }
 
   const parts = bulletParts(raw);
+  // morph 対応付け: visual.key があれば 本文=!!key / note=.note
+  const key = v.key as string | undefined;
 
   const noteH = v.note ? 0.5 : 0;
   slide.addText(parts, {
@@ -1131,6 +1153,7 @@ function renderBullets(pres: Pres, s: DeckSlide): Slide {
     h: SLIDE_H - topY - 0.35 - noteH,
     align: "left", valign: "top", wrap: true,
     lineSpacingMultiple: 1.1,
+    ...morphOpt(key),
   });
 
   if (v.note) {
@@ -1138,6 +1161,7 @@ function renderBullets(pres: Pres, s: DeckSlide): Slide {
       x: MARGIN.left, y: SLIDE_H - 0.5, w: CONTENT_W, h: 0.4,
       fontSize: FS.small, fontFace: FONT, color: C.darkGray,
       align: "center", valign: "middle",
+      ...morphOpt(key, "note"),
     });
   }
   return slide;
@@ -1147,7 +1171,7 @@ function renderBullets(pres: Pres, s: DeckSlide): Slide {
 // 発表冒頭の章立て。番号バッジ＋章タイトル(＋任意の補足)を縦に並べる。3-7 項目向け。
 function renderAgenda(pres: Pres, s: DeckSlide): Slide {
   const v = vis(s);
-  const raw = (v.items as Array<string | { title: string; desc?: string }>) ?? [];
+  const raw = (v.items as Array<string | { title: string; desc?: string; key?: string }>) ?? [];
   const items = raw.map((it) => (typeof it === "string" ? { title: it } : it));
 
   const slide = addContentSlide(pres, s.title);
@@ -1166,26 +1190,40 @@ function renderAgenda(pres: Pres, s: DeckSlide): Slide {
     const rowY = areaTop + i * rowH;
     const cy = rowY + (rowH - badge) / 2;
 
+    // morph 対応付け: key があれば 丸=.badge / 番号=.num / 題名=!!key。
+    // section の visual.key と揃えると、目次の行が章扉の大きな番号・題名へ移動しながら拡大する。
+    const key = item.key;
     slide.addShape(pres.ShapeType.ellipse, {
       x: badgeX, y: cy, w: badge, h: badge,
       fill: { color: C.primary },
+      ...morphOpt(key, "badge"),
     });
     slide.addText(`${i + 1}`, {
       x: badgeX, y: cy, w: badge, h: badge,
       fontSize: FS.heading, fontFace: FONT, color: C.white,
       bold: true, align: "center", valign: "middle",
+      ...morphOpt(key, "num"),
     });
 
-    const parts: TextProps[] = [
-      { text: item.title, options: { fontSize: FS.heading, fontFace: FONT, color: C.text, bold: true } },
-    ];
-    if (item.desc) {
-      parts.push({ text: "\n" + item.desc, options: { fontSize: FS.small, fontFace: FONT, color: C.darkGray } });
-    }
-    slide.addText(parts, {
-      x: textX, y: rowY, w: textW, h: rowH,
-      align: "left", valign: "middle", wrap: true,
+    // 題名と補足は別々のテキストボックスに描く（1 つにまとめると、章扉へ morph したときに
+    // 文字列が一致せず crossfade になる）。2 つを縦に詰めて行の中央に置き、見た目は 1 ブロックのまま。
+    const titleH = (FS.heading * 1.3) / 72;
+    const descH = item.desc ? (FS.small * 1.3) / 72 : 0;
+    const blockTop = rowY + (rowH - titleH - descH) / 2;
+    slide.addText(item.title, {
+      x: textX, y: blockTop, w: textW, h: titleH,
+      fontSize: FS.heading, fontFace: FONT, color: C.text, bold: true,
+      align: "left", valign: item.desc ? "bottom" : "middle", wrap: true, margin: 0,
+      ...morphOpt(key),
     });
+    if (item.desc) {
+      slide.addText(item.desc, {
+        x: textX, y: blockTop + titleH, w: textW, h: descH,
+        fontSize: FS.small, fontFace: FONT, color: C.darkGray,
+        align: "left", valign: "top", wrap: true, margin: 0,
+        ...morphOpt(key, "desc"),
+      });
+    }
 
     // Hairline separator between rows (not after the last).
     if (i < items.length - 1) {
@@ -1268,10 +1306,14 @@ function renderSection(pres: Pres, s: DeckSlide): Slide {
   const v = vis(s);
   const slide = pres.addSlide();
   addNotes(slide, s);
+  // morph 対応付け: visual.key があれば 章番号=.num / 題名=!!key（agenda の items[].key と揃える）。
+  // 背景は content slide と同じ !!bg なので、morph では色だけが滑らかに変わる。
+  const key = v.key as string | undefined;
 
   slide.addShape(pres.ShapeType.rect, {
     x: 0, y: 0, w: SLIDE_W, h: SLIDE_H,
     fill: { color: darken(C.primary, 0.3) },
+    objectName: morphName("bg"),
   });
 
   const LX = 1.4;
@@ -1296,6 +1338,7 @@ function renderSection(pres: Pres, s: DeckSlide): Slide {
       x: TX, y: v.eyebrow ? 2.6 : 2.35, w: 10.5, h: 1.3,
       fontSize: 64, fontFace: FONT, color: C.accent,
       bold: true, align: "left", valign: "middle",
+      ...morphOpt(key, "num"),
     });
   }
 
@@ -1303,6 +1346,7 @@ function renderSection(pres: Pres, s: DeckSlide): Slide {
     x: TX, y: hasNumber ? 3.85 : (v.eyebrow ? 2.85 : 2.6), w: 10.6, h: 1.3,
     fontSize: 44, fontFace: FONT, color: C.white,
     bold: true, align: "left", valign: "middle", wrap: true,
+    ...morphOpt(key),
   });
 
   if (v.subtitle) {
@@ -1344,11 +1388,15 @@ function renderSplit(pres: Pres, s: DeckSlide): Slide {
   const noteH = v.note ? 0.5 : 0;
   const capH = v.caption ? 0.55 : 0;
   const areaH = SLIDE_H - topY - 0.35 - noteH;
+  // morph 対応付け: visual.key → テキスト列=!!key、visual.image_key → 画像=!!image_key / caption=.caption
+  const key = v.key as string | undefined;
+  const imageKey = v.image_key as string | undefined;
 
   // Text column (bullets).
   slide.addText(bulletParts(raw), {
     x: txtX + 0.1, y: topY, w: colW - 0.1, h: areaH,
     align: "left", valign: "top", wrap: true, lineSpacingMultiple: 1.1,
+    ...morphOpt(key),
   });
 
   // Image column — fit within the half, preserving aspect ratio, centered.
@@ -1362,6 +1410,7 @@ function renderSplit(pres: Pres, s: DeckSlide): Slide {
     slide.addImage({
       data: loadAsset(v.image as string),
       x: imgX + (colW - iw) / 2, y: iy, w: iw, h: ih,
+      ...morphOpt(imageKey),
     });
     if (v.caption) {
       // Caption sits directly beneath the image (not the column bottom).
@@ -1369,6 +1418,7 @@ function renderSplit(pres: Pres, s: DeckSlide): Slide {
         x: imgX, y: iy + ih + 0.08, w: colW, h: capH,
         fontSize: FS.micro, fontFace: FONT, color: C.midGray,
         align: "center", valign: "top", wrap: true,
+        ...morphOpt(imageKey, "caption"),
       });
     }
   }
@@ -1449,7 +1499,8 @@ function renderBigStat(pres: Pres, s: DeckSlide): Slide {
 // ═══════════════════════════════════════════════════════════
 
 // デモ短縮版 mp4（demos/output/）をスライドに埋め込む一点物レイアウト。
-// 上映用に tools/set-video-autoplay.sh で自動再生＋ループ化する前提。
+// 上映用の自動再生＋ループは既定で有効（visual.autoplay / visual.loop を false で抑止）。
+// PptxGenJS はクリック再生でしか出力しないため、lib/postprocess.ts が <p:timing> を注入する。
 // 動画は slides/ の外（プロジェクト直下 demos/output/）にあり、/tmp ビルドでは
 // 相対パスが解決できないため、build.sh が DEMO_DIR を絶対パスで渡す。
 const DEMO_DIR = process.env.DEMO_DIR
@@ -1523,12 +1574,19 @@ function renderDemo(pres: Pres, s: DeckSlide): Slide {
   // ポスター画像（再生前・PNG書き出しでの見た目）。無ければプレイボタン既定。
   let cover: string | undefined;
   try { cover = loadImage(resolve(DEMO_DIR, poster)); } catch { cover = undefined; }
+  const mediaName = "demo video";
   slide.addMedia({
     type: "video",
     path: resolve(DEMO_DIR, video),
     x: vidX, y: vidY, w: vidW, h: vidH,
+    objectName: mediaName,
     ...(cover ? { cover } : {}),
   } as any);
+  requestMediaPlayback(slide, {
+    name: mediaName,
+    autoplay: v.autoplay !== false,
+    loop: v.loop !== false,
+  });
 
   const belowY = vidY + vidH + gap;
 
@@ -1753,6 +1811,7 @@ function renderDataFlow(pres: Pres, s: DeckSlide): Slide {
   const lanes = (v.lanes as Array<{
     name: string; home: string; cloud: string;
     flow: "out" | "in"; flow_label: string; note: string; tone: "warn" | "ok";
+    key?: string;
   }>) ?? [];
 
   const chipX = 0.45, chipW = 1.5;
@@ -1766,48 +1825,58 @@ function renderDataFlow(pres: Pres, s: DeckSlide): Slide {
     const tone = ln.tone === "ok" ? C.primary : C.accent;
     const boxesY = laneTop + 0.1;
     const cy = boxesY + boxH / 2;
+    // morph 対応付け: key があれば チップ=!!key / 名前=.name / 手元=.home(.icon/.label)
+    //                 クラウド=.cloud(.icon/.label) / 矢印=.arrow / 矢印ラベル=.flow / 注記=.note
+    const key = ln.key;
 
     // レーン名チップ
     slide.addShape(pres.ShapeType.rect, {
       x: chipX, y: cy - 0.45, w: chipW, h: 0.9,
       fill: { color: tone }, rectRadius: 0.1,
+      ...morphOpt(key),
     });
     slide.addText(ln.name, {
       x: chipX, y: cy - 0.45, w: chipW, h: 0.9,
       fontSize: FS.small, fontFace: FONT, color: C.white, bold: true,
       align: "center", valign: "middle", wrap: true,
+      ...morphOpt(key, "name"),
     });
 
     // 手元（laptop）ボックス
-    const drawBox = (bx: number, icon: string, label: string, borderCol: string) => {
+    const drawBox = (bx: number, icon: string, label: string, borderCol: string, part: string) => {
       slide.addShape(pres.ShapeType.rect, {
         x: bx, y: boxesY, w: boxW, h: boxH,
         fill: { color: C.white }, line: { color: borderCol, width: 1.25 }, rectRadius: 0.08,
+        ...morphOpt(key, part),
       });
-      addIcon(slide, icon, bx + 0.22, cy - 0.34, 0.68, borderCol);
+      addIcon(slide, icon, bx + 0.22, cy - 0.34, 0.68, borderCol, key ? morphName(key, `${part}.icon`) : undefined);
       slide.addText(label, {
         x: bx + 1.05, y: boxesY, w: boxW - 1.2, h: boxH,
         fontSize: FS.small, fontFace: FONT, color: C.text,
         align: "left", valign: "middle", wrap: true,
+        ...morphOpt(key, `${part}.label`),
       });
     };
-    drawBox(homeX, "laptop", ln.home, ln.tone === "ok" ? C.primary : C.midGray);
+    drawBox(homeX, "laptop", ln.home, ln.tone === "ok" ? C.primary : C.midGray, "home");
     // データ保全アイコン（手元に留まる側）
     if (ln.tone === "ok") {
-      addIcon(slide, "shield-lock-outline", homeX + boxW - 0.5, boxesY + 0.12, 0.34, C.primary);
+      addIcon(slide, "shield-lock-outline", homeX + boxW - 0.5, boxesY + 0.12, 0.34, C.primary,
+        key ? morphName(key, "home.shield") : undefined);
     }
-    drawBox(cloudX, "cloud-outline", ln.cloud, C.midGray);
+    drawBox(cloudX, "cloud-outline", ln.cloud, C.midGray, "cloud");
 
     // 矢印（out=右向き・accent＝データが外へ／in=左向き・primary＝コードだけ）
     const isOut = ln.flow === "out";
     slide.addShape((isOut ? "rightArrow" : "leftArrow") as any, {
       x: arrowX, y: cy - 0.24, w: arrowW, h: 0.48,
       fill: { color: tone }, line: { color: tone },
+      ...morphOpt(key, "arrow"),
     });
     slide.addText(ln.flow_label, {
       x: arrowX - 0.3, y: cy - 0.92, w: arrowW + 0.6, h: 0.4,
       fontSize: FS.micro, fontFace: FONT, color: tone, bold: true,
       align: "center", valign: "middle",
+      ...morphOpt(key, "flow"),
     });
 
     // 注記（tone 色＋アイコン）
@@ -1817,6 +1886,7 @@ function renderDataFlow(pres: Pres, s: DeckSlide): Slide {
       x: homeX, y: boxesY + boxH + 0.12, w: cloudX + boxW - homeX, h: 0.5,
       fontSize: FS.small, fontFace: FONT, color: tone, bold: true,
       align: "center", valign: "middle", wrap: true,
+      ...morphOpt(key, "note"),
     });
   });
 

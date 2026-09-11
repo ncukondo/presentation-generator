@@ -56,6 +56,8 @@ PptxGenJS (TypeScript/Bun) によるプレゼンテーション動画自動生�
 │   ├── instrument.ts        # addText を自動バランス＆ジオメトリ収集
 │   ├── lint-wrap.ts         # 折り返し lint（残課題を改修推奨として出力）
 │   ├── validate.ts          # slides.yaml 構造バリデーション（layout 別スキーマ）
+│   ├── transitions.ts       # スライド切り替え効果（morph/fade/push/wipe）の解析・XML 生成・morph 名
+│   ├── postprocess.ts       # 保存直前の XML 後処理（transition 注入・動画の自動再生/ループ・重複 id 修復）
 │   ├── types.ts             # PptxGenJS 型定義
 │   ├── icons.ts             # Material Design Icons ローダー
 │   └── cite.ts              # 引用管理（pandoc citekey → APA形式）
@@ -96,6 +98,10 @@ PptxGenJS (TypeScript/Bun) によるプレゼンテーション動画自動生�
 - `narration` — TTS・動画の読み上げ原稿（指定時は PowerPoint ノートにも入る）。
 - `notes` — PowerPoint **ノート専用メモ**（TTS では読み上げない）。ナレーション不要のデッキで
   登壇メモ・備考を書きたい時に使う。ノート欄に入るのは `notes ?? narration`。
+- `transition` — このスライドに入るときの切り替え効果（`morph` / `fade` / `push` / `wipe` / `none`、
+  または `{type, option?, direction?, duration?}`）。省略時は `defaults.transition`。
+  morph で動かす要素には `visual` 内の要素に `key` を付ける（`docs/layouts.md` の transition 節）。
+  ※ morph は PowerPoint 2019 / 365 のスライドショー専用。MP4（静止 PNG 由来）には反映されない。
 - `visual` — layout 別パラメータ（`subtitle`, `cards`, `items`, `steps` 等）。
 
 各 layout が要求する `visual` のスキーマは **`docs/layouts.md`** を参照。
@@ -219,13 +225,13 @@ bun run qa -- --model claude-sonnet-4-5 # モデル指定
 `*.sh` は Windows PowerPoint(COM) を使うので **WSL から見える Windows パス**（`/mnt/...`）に対象を置くこと。
 
 ```bash
-bash tools/set-video-autoplay.sh <pptx>      # 全動画に「自動再生(WithPrevious)＋ループ」を付与（冪等）
-                                             #   ついでに PptxGenJS が稀に出す重複 cNvPr id を再保存で解消
 bash tools/export-pdf.sh <pptx> [out.pdf]    # PDF 化。非表示(hidden)スライドは除外（元 pptx は不変）
 python3 tools/make-handout.py <1up.pdf> [out.pdf] [cols] [rows]  # 6面付けハンドアウト（既定 2x3）。要 PyMuPDF
+bash tools/set-video-autoplay.sh <pptx>      # 退避策: PowerPoint(COM) で自動再生＋ループを付け直す（通常不要）
 ```
 
-- `set-video-autoplay.sh` … PptxGenJS の埋め込み動画は既定で「クリック再生」。これを上映用に自動再生＋ループへ。
+- 動画の自動再生＋ループと重複 cNvPr id の修復は **`bun run generate` の後処理（`lib/postprocess.ts`）が行う**。
+  `set-video-autoplay.sh` は XML 版で再生されない環境が出た時の退避策（`tools/build.sh` は `AUTOPLAY_COM=1` で実行）。
 - `export-pdf.sh` … 質疑用などの非表示スライドを配布 PDF から外したい時に。`SlideShowTransition.Hidden` で判定。
 - `make-handout.py` … PowerPoint がレンダリングした 1up PDF を入力に PyMuPDF（`pip install pymupdf`）で面付け。
 
