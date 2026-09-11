@@ -138,6 +138,10 @@ async function main() {
   }
 
   mkdirSync(OUTPUT_DIR, { recursive: true });
+  // 前回ビルドの残骸（スライド数が減った時の古い slide_NNN.png）を消してから書き出す
+  for (const f of readdirSync(OUTPUT_DIR)) {
+    if (/^slide_\d+\.png$/.test(f)) unlinkSync(join(OUTPUT_DIR, f));
+  }
 
   // Detect backend
   const hasWSL = await commandExists("wslpath");

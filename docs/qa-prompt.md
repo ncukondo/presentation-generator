@@ -26,7 +26,10 @@ reference concrete visual evidence, and do not be lenient.
 5. **Minimum font** — any body text visibly smaller than ~22pt (you cannot measure exactly, estimate if one block is conspicuously smaller than siblings)
 6. **Empty space imbalance** — a conspicuous blank region (>25% of the content area) with no visual purpose, or content bunched in one half
 7. **Color misuse** — more than 5 distinct saturated colors visible; or index-colored parallel items (e.g. 3 cards each a different color for no semantic reason)
-8. **Decorative / mismatched icons** — icons that have no semantic relation to the text, placed as filler
+8. **Decorative / mismatched icons** — icons that have no semantic relation to the text,
+   placed as filler; or an icon whose meaning contradicts its label (e.g. a lightbulb next
+   to "installation steps", a rocket next to "safety"). The fix is to replace it with an
+   icon that depicts the content, or remove it.
 9. **Placeholder text** — any of: "ここに記載", "ここに記入", "をここに", "xxxx", "TODO", "lorem ipsum"
 10. **Broken citation** — rendering artifacts like "(@)" or a lone "@"
 11. **Over-trimmed content** — text so abbreviated that the slide no longer conveys a
@@ -50,6 +53,11 @@ reference concrete visual evidence, and do not be lenient.
     sentence, a question, or a slogan (e.g. 「〜である」「〜が必要だ」「〜のか？」) instead
     of a concise noun phrase. Flag it; the fix is to rewrite the title as a noun phrase
     and move any claim into the body as a fact.
+15. **Text where a diagram would carry it** (minor) — body text that describes a flow,
+    a comparison of two paths, a proportion by category, or a screen operation, rendered
+    as plain bullets or cards when a diagram layout or an annotated screenshot would show
+    it directly. Note it as minor with the suggested layout; do not flag a slide that
+    already uses a diagram, chart, or annotated screenshot.
 
 Design principles document has the full ruleset — defer to it for any ambiguous case.
 The top-level principle is that the slide must communicate its content to the audience;
@@ -68,7 +76,7 @@ Return ONLY valid JSON in the following shape, no preamble, no markdown fence:
   "issues": [
     {
       "severity": "blocker" | "major" | "minor",
-      "category": "overflow" | "overlap" | "wrap" | "contrast" | "font" | "empty" | "color" | "icon" | "placeholder" | "cite" | "over-trimmed" | "redundant" | "speculative" | "title-form" | "other",
+      "category": "overflow" | "overlap" | "wrap" | "contrast" | "font" | "empty" | "color" | "icon" | "placeholder" | "cite" | "over-trimmed" | "redundant" | "speculative" | "title-form" | "needs-visual" | "other",
       "description": "short concrete description",
       "where": "rough location: top-left, right column, card 2, etc."
     }

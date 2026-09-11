@@ -72,8 +72,12 @@
 | visual | 型 | 必須 |
 |---|---|---|
 | `subtitle` | string | 任意 |
-| `steps[]` | string[] | ✅ |
+| `steps[]` | `string`（タイトルのみ）or `{title, icon?}` | ✅ |
 | `note` | string | 任意（下部キャプション） |
+
+- `steps[].icon` … 番号の横に内容を表すアイコンを添える。MDI 名（例 `book-search-outline`）
+  または `lib/icons.ts` のキー。**既定アイコンは無い**（内容に合わないアイコンは装飾ノイズ）。
+  内容の比喩になるアイコンが見つからないステップは省略して番号だけにする。
 
 ### `step-detail` — スクリーンショット1枚＋注釈
 タイトルは `Step <step>：<title>` として描画される。

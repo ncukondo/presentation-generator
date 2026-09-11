@@ -171,23 +171,30 @@ function renderEvidence(pres: Pres, s: DeckSlide): Slide {
 }
 
 // ── steps (← slide04 steps-overview) ─────────────────────
-const STEP_ICONS = [
-  ICONS.magnify, ICONS.shieldCheck, ICONS.cloudUpload, ICONS.fileDocument,
-  ICONS.messageText, ICONS.cog, ICONS.check,
-];
+// steps[] は string（タイトルのみ）か {title, icon?}。icon は MDI 名 or lib/icons.ts のキー。
+// 既定アイコンは持たない — 内容に合わないアイコンは装飾ノイズなので、指定が無ければ番号だけ描く。
+type StepItem = { title: string; icon?: string };
+function normalizeSteps(raw: unknown): StepItem[] {
+  return ((raw as Array<string | StepItem>) ?? []).map((st) =>
+    typeof st === "string" ? { title: st } : st,
+  );
+}
 
 function renderStepsOverview(pres: Pres, s: DeckSlide): Slide {
   const v = vis(s);
-  const stepLabels = v.steps as string[];
+  const steps = normalizeSteps(v.steps);
 
   const slide = addContentSlide(pres, s.title);
   addNotes(slide, s);
 
-  slide.addText(v.subtitle as string, {
-    x: MARGIN.left, y: 1.25, w: CONTENT_W, h: 0.5,
-    fontSize: FS.heading, fontFace: FONT, color: C.primary,
-    bold: true, align: "center", valign: "middle",
-  });
+  // subtitle は任意（題名の言い換えを誘発しないよう必須にしない）
+  if (typeof v.subtitle === "string" && v.subtitle.length > 0) {
+    slide.addText(v.subtitle, {
+      x: MARGIN.left, y: 1.25, w: CONTENT_W, h: 0.5,
+      fontSize: FS.heading, fontFace: FONT, color: C.primary,
+      bold: true, align: "center", valign: "middle",
+    });
+  }
 
   const rowCounts = [4, 3];
   const stepH = 2.05;
@@ -209,8 +216,9 @@ function renderStepsOverview(pres: Pres, s: DeckSlide): Slide {
 
     for (let c = 0; c < count; c++) {
       const i = index++;
-      const label = stepLabels[i];
-      if (!label) return;
+      const st = steps[i];
+      if (!st) return;
+      const label = st.title;
       const x = startX + c * (stepW + gap);
 
       slide.addShape(pres.ShapeType.rect, {
@@ -225,7 +233,8 @@ function renderStepsOverview(pres: Pres, s: DeckSlide): Slide {
       });
 
       const headerY = rowY + 0.25;
-      const groupW = numSize + 0.15 + iconSize;
+      // 番号＋（あれば）アイコンをひとまとまりで中央揃え
+      const groupW = st.icon ? numSize + 0.15 + iconSize : numSize;
       const groupX = x + (stepW - groupW) / 2;
 
       slide.addShape(pres.ShapeType.ellipse, {
@@ -237,9 +246,11 @@ function renderStepsOverview(pres: Pres, s: DeckSlide): Slide {
         fontSize: FS.heading, fontFace: FONT, color: C.white,
         bold: true, align: "center", valign: "middle",
       });
-      addIcon(slide, STEP_ICONS[i]!,
-        groupX + numSize + 0.15, headerY + (numSize - iconSize) / 2,
-        iconSize, C.primary);
+      if (st.icon) {
+        addIcon(slide, resolveIcon(st.icon),
+          groupX + numSize + 0.15, headerY + (numSize - iconSize) / 2,
+          iconSize, C.primary);
+      }
 
       slide.addText(label, {
         x: x + 0.05, y: rowY + 0.25 + numSize + 0.15, w: stepW - 0.1, h: stepH - numSize - 0.55,

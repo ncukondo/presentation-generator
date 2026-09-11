@@ -27,6 +27,10 @@ PptxGenJS (TypeScript/Bun) によるプレゼンテーション動画自動生�
   「〜かもしれない」「〜すべき」はスライド面に置かない。
 - **解釈や示唆を伝える必要がある時は、事実の並べ方（順序・対比・強調）でそれが伝わるように
   構成し、言葉にするのは `narration`（口頭）で行う。**
+- **図・アイコンは理解を補足するために置き、必ず内容に合ったものを使う。** 関係・流れ・比較は
+  文章より図解 layout（`data-flow` / `compare-paths` / `usage-bars` 等）で示し、画面操作は
+  スクリーンショットに注釈を付ける。内容の比喩になるアイコンが無ければ置かない
+  （`docs/design-principles.md` 5章）。
 
 ## Project Structure
 
@@ -78,8 +82,11 @@ PptxGenJS (TypeScript/Bun) によるプレゼンテーション動画自動生�
 - `id` — 一意識別子（重複不可）。表示順は配列の並び順。
 - `layout` — レンダラ名（`title` / `agenda` / `bullets` / `section` / `number-cards` /
   `evidence` / `steps` / `step-detail` / `figure` / `split` / `chart` / `table` /
-  `big-stat` / `risks` / `checklist` / `statement` / `closing` / `references`）。
+  `big-stat` / `risks` / `checklist` / `statement` / `closing` / `references`、
+  図解系: `data-flow` / `compare-paths` / `usage-bars` / `spectrum` / `nested-layers` /
+  `agent-loop` / `demo` / `section-recap` / `self-intro`）。
   ※ 旧 `grid` は `number-cards` に統合（別名として残るが新規は number-cards を使う）。
+  ※ 関係・流れ・比較を伝える内容は、bullets / number-cards より図解系 layout を優先する。
 - `title` — タイトル。
 - `narration` — TTS・動画の読み上げ原稿（指定時は PowerPoint ノートにも入る）。
 - `notes` — PowerPoint **ノート専用メモ**（TTS では読み上げない）。ナレーション不要のデッキで

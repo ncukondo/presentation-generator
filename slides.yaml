@@ -116,6 +116,31 @@ slides:
     #   登壇メモ・備考をここに記載。
 
   # --------------------------------------------------------------------------
+  # 用途別の割合（横棒グラフ）— カテゴリ別の％は文章やカードより横棒で示す
+  # layout: usage-bars / visual: { bars[].{label, value, cite?}, axisMax?, subtitle?, banner?, footnote? }
+  # --------------------------------------------------------------------------
+  - id: usage-by-purpose
+    layout: usage-bars
+    title: 生成 AI の用途別利用率
+    visual:
+      subtitle: 国内 12 施設・研究者 312 名（2024 年度）
+      axisMax: 50
+      bars:
+        - label: 文献検索
+          value: 42
+        - label: 英文校正
+          value: 38
+        - label: 論文の要約
+          value: 27
+        - label: データ解析
+          value: 12
+        - label: 原稿執筆
+          value: 9
+      footnote: 複数回答。利用率は「月 1 回以上利用」の割合
+    narration: |
+      ここに用途別利用率のナレーション原稿を記載します。文献検索と英文校正が多く、解析・執筆はまだ少数であることを口頭で補足します。
+
+  # --------------------------------------------------------------------------
   # 特徴・ポイント紹介（番号ではなくアイコンのバッジ — 連番に意味が無い並列要素向け）
   # 各カードに icon を指定すると番号の代わりにアイコンが入る。badge: none で全省略も可。
   # --------------------------------------------------------------------------
@@ -125,11 +150,12 @@ slides:
     visual:
       # 「3つのポイント」のような題名の言い換え subtitle は置かない。
       # body / detail は評価語（速い・堅牢・簡単）ではなく検証可能な事実（数値・条件）で書く。
+      # icon は見出しの比喩になるものを MDI から意味で選ぶ（合うものが無ければ省略して番号にする）。
       items:
         - heading: 処理時間
           body: 1 件あたり中央値 0.8 秒
           detail: 計測データ 10 万件
-          icon: rocket
+          icon: timer-outline
         - heading: 検証体制
           body: 3 段階の自動チェック
           detail: 構文・整合性・出力形式を順に検査
@@ -137,7 +163,7 @@ slides:
         - heading: 導入手順
           body: 設定ファイル 1 つで起動
           detail: 追加インストール不要
-          icon: lightbulb
+          icon: download-outline
     narration: |
       ここに特長紹介のナレーション原稿を記載します。
 
@@ -200,21 +226,22 @@ slides:
 
   # --------------------------------------------------------------------------
   # ステップ概要スライド（7ステップの一覧表示）
-  # layout: steps / visual: { subtitle, steps[], note }
+  # layout: steps / visual: { subtitle?, steps[]: string | {title, icon?}, note? }
+  # icon は各ステップの内容の比喩を MDI 名で指定（既定アイコンは無い。合うものが無ければ省略）
   # --------------------------------------------------------------------------
   - id: steps-overview
     layout: steps
-    title: ワークフローの全体像
+    title: 研究ワークフローの全体像
     visual:
       # subtitle: 「実践する流れ」は題名の言い換えなので置かない
       steps:
-        - ステップ1のタイトル
-        - ステップ2のタイトル
-        - ステップ3のタイトル
-        - ステップ4のタイトル
-        - ステップ5のタイトル
-        - ステップ6のタイトル
-        - ステップ7のタイトル
+        - { title: 文献検索, icon: book-search-outline }
+        - { title: 適格性の選定, icon: filter-outline }
+        - { title: データ抽出, icon: table-search }
+        - { title: 統計解析, icon: chart-box-outline }
+        - { title: 結果の解釈, icon: comment-edit-outline }
+        - { title: 原稿執筆, icon: file-document-edit-outline }
+        - { title: 投稿・査読, icon: send-outline }
       # note: 「詳細は次のスライドで」のような進行案内はスライドに書かず口頭（narration）で言う
     narration: |
       ここにステップ概要のナレーション原稿を記載します。各ステップの詳細は次のスライドから順に説明します。
@@ -222,95 +249,47 @@ slides:
     #   登壇メモ・備考をここに記載。
 
   # --------------------------------------------------------------------------
-  # 各ステップ詳細スライド（スクリーンショット付き）
-  # layout: step-detail / visual: { step(番号), screenshot, note,
-  #         任意: imgH/imgW/imgY, arrows[], textAnnotations[], overlayImages[], rectAnnotations[] }
-  # screenshot は screenshots/ ディレクトリ内のファイル名を指定。
-  # タイトルは "Step <step>：<title>" として描画される。
+  # 各ステップ詳細スライド（スクリーンショット＋注釈）
+  # layout: step-detail / visual: { step(番号), screenshot, note?,
+  #         任意: imgH/imgW/imgY, arrows[], rectAnnotations[], textAnnotations[], overlayImages[] }
+  # screenshot は screenshots/ ディレクトリ内のファイル名。タイトルは "Step <step>：<title>" で描画。
+  # 注釈の座標はスライド絶対値（インチ）。画像は既定で x=2.04, y=1.35, w=9.24, h=5.2 に置かれる。
+  # 「どこを見るか」を赤枠・矢印・短い赤字で示す。注釈の無いスクリーンショットは聴衆が探すことになる。
+  # ステップの数だけこのブロックを複製する（見本は 2 枚。screenshots/step-03〜07.png も同梱）。
   # --------------------------------------------------------------------------
   - id: step-1
     layout: step-detail
-    title: ステップ1のタイトル
+    title: 文献検索
     visual:
       step: 1
       screenshot: step-01.png
-      note: "ステップ1の補足説明"
+      # 赤枠で注目箇所を囲み、矢印で指す
+      rectAnnotations:
+        - { x: 2.6, y: 2.0, w: 3.4, h: 0.7 }
+      arrows:
+        - { x: 6.2, y: 2.15, rotate: 180 }
+      textAnnotations:
+        - { text: "検索式を入力", x: 7.0, y: 2.05, w: 2.6, h: 0.5, fontSize: 20 }
+      note: "PubMed の検索画面（2024 年 12 月時点）"
     narration: |
-      ステップ1のナレーション原稿をここに記載します。
-    # notes: |        # narration の代わりにノート専用メモを書く（TTS では読み上げない）
-    #   登壇メモ・備考をここに記載。
+      ステップ1のナレーション原稿をここに記載します。画面のどこに検索式を入れるかを口頭で補足します。
 
   - id: step-2
     layout: step-detail
-    title: ステップ2のタイトル
+    title: 適格性の選定
     visual:
       step: 2
       screenshot: step-02.png
-      note: ステップ2の補足説明
+      # 画像を少し縮めて、下に注釈テキストの余地を作る例（imgH を上書き）
+      rectAnnotations:
+        - { x: 2.6, y: 4.9, w: 8.1, h: 0.55 }
+      textAnnotations:
+        - { text: "除外理由を記録", x: 8.4, y: 4.3, w: 2.4, h: 0.5, fontSize: 20 }
+      arrows:
+        - { x: 7.6, y: 4.95, rotate: 90 }
+      note: "選定チェックリスト（PRISMA 2020 準拠）"
     narration: |
-      ステップ2のナレーション原稿をここに記載します。
-    # notes: |        # narration の代わりにノート専用メモを書く（TTS では読み上げない）
-    #   登壇メモ・備考をここに記載。
-
-  - id: step-3
-    layout: step-detail
-    title: ステップ3のタイトル
-    visual:
-      step: 3
-      screenshot: step-03.png
-      note: ステップ3の補足説明
-    narration: |
-      ステップ3のナレーション原稿をここに記載します。
-    # notes: |        # narration の代わりにノート専用メモを書く（TTS では読み上げない）
-    #   登壇メモ・備考をここに記載。
-
-  - id: step-4
-    layout: step-detail
-    title: ステップ4のタイトル
-    visual:
-      step: 4
-      screenshot: step-04.png
-      note: ステップ4の補足説明
-    narration: |
-      ステップ4のナレーション原稿をここに記載します。
-    # notes: |        # narration の代わりにノート専用メモを書く（TTS では読み上げない）
-    #   登壇メモ・備考をここに記載。
-
-  - id: step-5
-    layout: step-detail
-    title: ステップ5のタイトル
-    visual:
-      step: 5
-      screenshot: step-05.png
-      note: ステップ5の補足説明
-    narration: |
-      ステップ5のナレーション原稿をここに記載します。
-    # notes: |        # narration の代わりにノート専用メモを書く（TTS では読み上げない）
-    #   登壇メモ・備考をここに記載。
-
-  - id: step-6
-    layout: step-detail
-    title: ステップ6のタイトル
-    visual:
-      step: 6
-      screenshot: step-06.png
-      note: ステップ6の補足説明
-    narration: |
-      ステップ6のナレーション原稿をここに記載します。
-    # notes: |        # narration の代わりにノート専用メモを書く（TTS では読み上げない）
-    #   登壇メモ・備考をここに記載。
-
-  - id: step-7
-    layout: step-detail
-    title: ステップ7のタイトル
-    visual:
-      step: 7
-      screenshot: step-07.png
-      note: ステップ7の補足説明
-    narration: |
-      ステップ7のナレーション原稿をここに記載します。
-    # notes: |        # narration の代わりにノート専用メモを書く（TTS では読み上げない）
-    #   登壇メモ・備考をここに記載。
+      ステップ2のナレーション原稿をここに記載します。除外理由を記録する欄の位置を口頭で補足します。
 
   # --------------------------------------------------------------------------
   # リスクと品質管理スライド（2カラム: リスク + 対策）
@@ -342,6 +321,34 @@ slides:
       ここにリスクと品質管理のナレーション原稿を記載します。
     # notes: |        # narration の代わりにノート専用メモを書く（TTS では読み上げない）
     #   登壇メモ・備考をここに記載。
+
+  # --------------------------------------------------------------------------
+  # データの行き先（手元 ↔ クラウド）— 「どこへ何が出るか」は文章よりレーン図で示す
+  # layout: data-flow / visual: { lanes[].{name, home, cloud, flow(out|in), flow_label, note, tone(ok|warn)} }
+  #   flow: out … データが外へ出る（右向き・accent） / in … 外から受け取るだけ（左向き・primary）
+  #   tone:  ok … 手元に留まる（盾アイコン） / warn … 注意（accent）
+  # --------------------------------------------------------------------------
+  - id: data-flow-demo
+    layout: data-flow
+    title: 患者データと文献 PDF の行き先
+    visual:
+      lanes:
+        - name: 患者データ
+          home: 院内で匿名化して解析
+          cloud: 解析コードのみ配布
+          flow: in
+          flow_label: コードのみ受信
+          note: 個人情報は院外に出ない
+          tone: ok
+        - name: 文献 PDF
+          home: 手元で要約を依頼
+          cloud: クラウド LLM が本文を受信
+          flow: out
+          flow_label: 本文を外部へ送信
+          note: 出版社の利用規約で再配布が制限される場合がある
+          tone: warn
+    narration: |
+      ここにデータの行き先スライドのナレーション原稿を記載します。患者データは院外に出ず、文献 PDF は外部に送られる、という違いを口頭で説明します。
 
   # --------------------------------------------------------------------------
   # 事前準備スライド（2x2 カード型チェックリスト）
@@ -421,6 +428,35 @@ slides:
       # note: グラフの実装説明はスライド面に書かない（グラフは PowerPoint 上でデータ編集可能）
     narration: |
       ここにグラフスライドのナレーション原稿を記載します。
+
+  # --------------------------------------------------------------------------
+  # 2 経路の対比 — 同じ起点から分かれる 2 つの道を左右に並べ、見た目の類似と中身の違いを示す
+  # layout: compare-paths / visual: { source, left{name, icon?, note}, right{...}, middle?,
+  #         diffs_heading?, diffs[]?, conclusion, eyebrow?, cite?, cites? }
+  # conclusion は事実（検証結果の数値など）を書く。「〜すべき」は口頭で
+  # --------------------------------------------------------------------------
+  - id: compare-analysis
+    layout: compare-paths
+    title: 統計ソフトと生成 AI による解析結果
+    visual:
+      source: 同一の臨床データ（n=120）
+      left:
+        name: 統計ソフトで解析
+        icon: calculator-variant-outline
+        note: 解析手順をログに記録
+      right:
+        name: 生成 AI に解析を依頼
+        icon: robot-outline
+        note: 手順の記載が無いことがある
+      middle: 一見同じ
+      diffs_heading: 出力に記載が無かった項目
+      diffs:
+        - 欠損値の扱い
+        - 多重比較の補正
+        - 使用したライブラリのバージョン
+      conclusion: 検証 20 件中 14 件で、欠損値の扱いが出力に記載されなかった
+    narration: |
+      ここに 2 経路対比のナレーション原稿を記載します。同じデータでも手順の記録に差が出ること、再計算で確認する必要があることは口頭で述べます。
 
   # --------------------------------------------------------------------------
   # 表スライド（PowerPoint で編集できるネイティブ表）

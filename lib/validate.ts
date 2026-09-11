@@ -16,7 +16,9 @@ type FieldKind =
   | { t: "number"; optional?: boolean }
   | { t: "string[]"; optional?: boolean }
   | { t: "object"; optional?: boolean; fields: Record<string, FieldKind> }
-  | { t: "object[]"; optional?: boolean; fields: Record<string, FieldKind> };
+  | { t: "object[]"; optional?: boolean; fields: Record<string, FieldKind> }
+  // 各要素が string か object のどちらでもよい配列（例: steps[] = string | {title, icon?}）
+  | { t: "(string|object)[]"; optional?: boolean; fields: Record<string, FieldKind> };
 
 type Schema = Record<string, FieldKind>;
 
@@ -68,6 +70,23 @@ function checkField(path: string, value: unknown, kind: FieldKind, errors: strin
       for (const [k, sub] of Object.entries(kind.fields)) {
         checkField(`${path}.${k}`, (value as Record<string, unknown>)[k], sub, errors, warnings);
       }
+      return;
+    case "(string|object)[]":
+      if (!Array.isArray(value)) {
+        errors.push(`${path}: expected array, got ${describe(value)}`);
+        return;
+      }
+      value.forEach((v, i) => {
+        if (typeof v === "string") {
+          if (PLACEHOLDER_RE.test(v)) warnings.push(`${path}[${i}]: placeholder text detected ("${truncate(v)}")`);
+        } else if (typeof v === "object" && v !== null && !Array.isArray(v)) {
+          for (const [k, sub] of Object.entries(kind.fields)) {
+            checkField(`${path}[${i}].${k}`, (v as Record<string, unknown>)[k], sub, errors, warnings);
+          }
+        } else {
+          errors.push(`${path}[${i}]: expected string or object, got ${describe(v)}`);
+        }
+      });
       return;
     case "object[]":
       if (!Array.isArray(value)) {
@@ -145,7 +164,7 @@ const SCHEMAS: Record<string, LayoutSchema> = {
     top: { title: { t: "string" } },
     visual: {
       subtitle: { t: "string", optional: true },
-      steps: { t: "string[]" },
+      steps: { t: "(string|object)[]", fields: { title: { t: "string" }, icon: { t: "string", optional: true } } },
       note: { t: "string", optional: true },
     },
   },
